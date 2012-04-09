@@ -41,6 +41,7 @@ namespace mowa { namespace sgui {
 	
 class Control;
 class FloatVarControl;
+class DoubleVarControl;
 class IntVarControl;
 class BoolVarControl;
 class ButtonControl;
