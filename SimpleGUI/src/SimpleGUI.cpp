@@ -61,6 +61,13 @@ SimpleGUI::~SimpleGUI() {
 	ci::app::App::get()->unregisterMouseDown( cbMouseDown );
 	ci::app::App::get()->unregisterMouseUp( cbMouseUp );
 	ci::app::App::get()->unregisterMouseDrag( cbMouseDrag );
+    
+    for (std::vector<Control*>::iterator it = controls.begin(); 
+         it != controls.end();
+         ++it )
+    {
+        delete(*it);
+    }
 }
 	
 void SimpleGUI::init(App* app) {	
