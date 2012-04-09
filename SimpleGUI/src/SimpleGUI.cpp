@@ -78,6 +78,14 @@ FloatVarControl* SimpleGUI::addParam(const std::string& paramName, float* var, f
 	controls.push_back(control);
 	return control;
 }
+    
+DoubleVarControl* SimpleGUI::addParam(const std::string& paramName, double* var, double min, double max, double defaultValue) {
+    DoubleVarControl* control = new DoubleVarControl(paramName, var, min, max, defaultValue);
+    control->parentGui = this;
+    controls.push_back(control);
+    return control;
+}
+
 
 IntVarControl* SimpleGUI::addParam(const std::string& paramName, int* var, int min, int max, int defaultValue) {
 	IntVarControl* control = new IntVarControl(paramName, var, min, max, defaultValue);
@@ -340,8 +348,9 @@ void Control::setBackgroundColor(ColorA color) {
 	
 //-----------------------------------------------------------------------------
 	
-FloatVarControl::FloatVarControl(const std::string& name, float* var, float min, float max, float defaultValue) {
-	this->type = Control::FLOAT_VAR;
+template<typename T>
+NumberVarControl<T>::NumberVarControl(Control::Type type, const std::string& name, T* var, T min, T max, T defaultValue) {
+	this->type = type;
 	this->name = name;
 	this->var = var;
 	this->min = min;
@@ -357,18 +366,21 @@ FloatVarControl::FloatVarControl(const std::string& name, float* var, float min,
 	}
 }
 	
-float FloatVarControl::getNormalizedValue() {
+template<typename T>
+float NumberVarControl<T>::getNormalizedValue() {
 	return (*var - min)/(max - min);
 }
-	
-void FloatVarControl::setNormalizedValue(float value) {
-	float newValue = min + value*(max - min);
+
+template<typename T>
+void NumberVarControl<T>::setNormalizedValue(float value) {
+	T newValue = min + value*(max - min);
 	if (newValue != *var) {
 		*var = newValue;
 	}
 }
-	
-Vec2f FloatVarControl::draw(Vec2f pos) {
+    
+template<typename T>
+Vec2f NumberVarControl<T>::draw(Vec2f pos) {
 	activeArea = Rectf(
 		pos.x, 
 		pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y, 
@@ -397,102 +409,26 @@ Vec2f FloatVarControl::draw(Vec2f pos) {
 	pos.y += SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y + SimpleGUI::spacing;	
 	return pos;
 }
-	
-std::string FloatVarControl::toString() {
+    
+template<typename T>
+std::string NumberVarControl<T>::toString() {
 	std::stringstream ss;
 	ss << *var;
 	return ss.str();
 }
-	
-void FloatVarControl::fromString(std::string& strValue) {
-	*var = boost::lexical_cast<float>(strValue);
+
+template<typename T>
+void NumberVarControl<T>::fromString(std::string& strValue) {
+	*var = boost::lexical_cast<T>(strValue);
 }
 	
-void FloatVarControl::onMouseDown(MouseEvent event) {
+template<typename T>
+void NumberVarControl<T>::onMouseDown(MouseEvent event) {
 	onMouseDrag(event);	
 }
 
-void FloatVarControl::onMouseDrag(MouseEvent event) {
-	float value = (event.getPos().x - activeArea.x1)/(activeArea.x2 - activeArea.x1);
-	value = math<float>::max(0.0, math<float>::min(value, 1.0));	
-	setNormalizedValue(value);
-}
-	
-//-----------------------------------------------------------------------------
-	
-IntVarControl::IntVarControl(const std::string& name, int* var, int min, int max, int defaultValue) {
-	this->type = Control::INT_VAR;
-	this->name = name;
-	this->var = var;
-	this->min = min;
-	this->max = max;
-	if (defaultValue < min) {
-		*var = min;
-	}
-	else if (defaultValue > max) {
-		*var = max;
-	}
-	else {
-		*var = defaultValue;
-	}
-}
-
-float IntVarControl::getNormalizedValue() {
-	return (*var - min)/(float)(max - min);
-}
-
-void IntVarControl::setNormalizedValue(float value) {
-	int newValue = min + value*(max - min);
-	if (newValue != *var) {
-		*var = newValue;
-	}
-}
-	
-Vec2f IntVarControl::draw(Vec2f pos) {
-	activeArea = Rectf(
-					   pos.x, 
-					   pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y, 
-					   pos.x + SimpleGUI::sliderSize.x, 
-					   pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y
-					   );		
-	
-	gl::color(SimpleGUI::bgColor);
-	gl::drawSolidRect(Rectf(
-							(pos - SimpleGUI::padding).x, 
-							(pos - SimpleGUI::padding).y, 
-							(pos + SimpleGUI::sliderSize + SimpleGUI::padding).x, 
-							(pos + SimpleGUI::labelSize + SimpleGUI::sliderSize + SimpleGUI::padding*2).y)
-					  );	
-					  
-	std::stringstream ss;
-	ss <<  name << " " << *this->var;
-	gl::drawString(ss.str(),pos, SimpleGUI::textColor, SimpleGUI::textFont);
-	
-	gl::color(SimpleGUI::darkColor);
-	gl::drawSolidRect(activeArea);
-	
-	gl::color(SimpleGUI::lightColor);
-	gl::drawSolidRect(SimpleGUI::getScaledWidthRectf(activeArea, getNormalizedValue()));
-	
-	pos.y += SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y + SimpleGUI::spacing;	
-	return pos;	
-}	
-	
-std::string IntVarControl::toString() {
-	std::stringstream ss;
-	ss << *var;
-	return ss.str();	
-}
-
-void IntVarControl::fromString(std::string& strValue) {
-	*var = boost::lexical_cast<int>(strValue);	
-}
-
-void IntVarControl::onMouseDown(MouseEvent event) {
-	onMouseDrag(event);
-}
-	
-void IntVarControl::onMouseDrag(MouseEvent event) {
+template<typename T>
+void NumberVarControl<T>::onMouseDrag(MouseEvent event) {
 	float value = (event.getPos().x - activeArea.x1)/(activeArea.x2 - activeArea.x1);
 	value = math<float>::max(0.0, math<float>::min(value, 1.0));	
 	setNormalizedValue(value);

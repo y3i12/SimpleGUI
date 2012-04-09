@@ -103,6 +103,7 @@ public:
 
 
 	FloatVarControl* 	addParam(const std::string& paramName, float* var, float min=0, float max=1, float defaultValue = 0);
+    DoubleVarControl* 	addParam(const std::string& paramName, double* var, double min=0, double max=1, double defaultValue = 0);
 	IntVarControl*		addParam(const std::string& paramName, int* var, int min=0, int max=1, int defaultValue = 0);
 	BoolVarControl*		addParam(const std::string& paramName, bool* var, bool defaultValue = false, int groupId = -1);
 	ColorVarControl*	addParam(const std::string& paramName, ColorA* var, ColorA const defaultValue = ColorA(0, 1, 1, 1), int colorModel = RGB);
@@ -127,6 +128,7 @@ class Control {
 public:
 	enum Type {
 		FLOAT_VAR,
+        DOUBLE_VAR,
 		INT_VAR,
 		BOOL_VAR,
 		COLOR_VAR,
@@ -158,14 +160,14 @@ public:
 };
 	
 //-----------------------------------------------------------------------------
-
-class FloatVarControl : public Control {
+template<typename T>
+class NumberVarControl : public Control {
 public:	
-	float* var;
-	float min;
-	float max;
+	T* var;
+	T min;
+	T max;
 public:
-	FloatVarControl(const std::string& name, float* var, float min=0, float max=1, float defaultValue = 0);
+	NumberVarControl(Control::Type type, const std::string& name, T* var, T min=0, T max=1, T defaultValue = 0);
 	float getNormalizedValue();
 	void setNormalizedValue(float value);
 	Vec2f draw(Vec2f pos);
@@ -174,23 +176,26 @@ public:
 	void onMouseDown(MouseEvent event);	
 	void onMouseDrag(MouseEvent event);
 };
-	
-//-----------------------------------------------------------------------------
-	
-class IntVarControl : public Control {
+    
+class FloatVarControl : public NumberVarControl<float> {
 public:
-	int* var;
-	int min;
-	int max;
+	FloatVarControl(const std::string& name, float* var, float min=0, float max=1, float defaultValue = 0)
+    : NumberVarControl<float>( Control::FLOAT_VAR, name, var, min, max, defaultValue )
+    {}
+};
+    
+class DoubleVarControl : public NumberVarControl<double> {
 public:
-	IntVarControl(const std::string& name, int* var, int min=0, int max=1, int defaultValue = 0);
-	float getNormalizedValue();
-	void setNormalizedValue(float value);
-	Vec2f draw(Vec2f pos);
-	std::string toString();	
-	void fromString(std::string& strValue);
-	void onMouseDown(MouseEvent event);	
-	void onMouseDrag(MouseEvent event);	
+    DoubleVarControl(const std::string& name, double* var, double min=0, double max=1, double defaultValue = 0)
+    : NumberVarControl<double>( Control::DOUBLE_VAR, name, var, min, max, defaultValue )
+    {}
+};
+
+class IntVarControl : public NumberVarControl<int> {
+public:
+	IntVarControl(const std::string& name, int* var, int min=0, int max=1, int defaultValue = 0)
+    : NumberVarControl<int>( Control::INT_VAR, name, var, min, max, defaultValue )
+    {}
 };
 	
 //-----------------------------------------------------------------------------
