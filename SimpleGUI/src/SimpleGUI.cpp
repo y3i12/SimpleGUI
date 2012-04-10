@@ -675,10 +675,9 @@ void ButtonControl::onMouseUp(MouseEvent event) {
 }
 	
 void ButtonControl::fireClick() {
-	MouseEvent event;
 	bool handled = false;
-	for( CallbackMgr<bool (MouseEvent)>::iterator cbIter = callbacksClick.begin(); ( cbIter != callbacksClick.end() ) && ( ! handled ); ++cbIter ) {
-		handled = (cbIter->second)( event );
+	for( CallbackMgr<bool (void)>::iterator cbIter = callbacksClick.begin(); ( cbIter != callbacksClick.end() ) && ( ! handled ); ++cbIter ) {
+		handled = (cbIter->second)();
 	}
 }
 

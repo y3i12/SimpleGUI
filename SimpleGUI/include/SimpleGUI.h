@@ -238,7 +238,7 @@ public:
 class ButtonControl : public Control {
 private:
 	bool pressed;
-	CallbackMgr<bool (MouseEvent)>		callbacksClick;
+	CallbackMgr<bool (void)>		callbacksClick;
 public:
 	ButtonControl(const std::string& name);
 	Vec2f draw(Vec2f pos);
@@ -246,10 +246,10 @@ public:
 	void onMouseUp(MouseEvent event);
 
 	//! Registers a callback for Click events. Returns a unique identifier which can be used as a parameter to unregisterClick().
-	CallbackId		registerClick( std::function<bool (MouseEvent)> callback ) { return callbacksClick.registerCb( callback ); }
+	CallbackId		registerClick( std::function<bool (void)> callback ) { return callbacksClick.registerCb( callback ); }
 	//! Registers a callback for Click events. Returns a unique identifier which can be used as a parameter to unregisterClick().
 	template<typename T>
-	CallbackId		registerClick( T *obj, bool (T::*callback)(MouseEvent) ) { return callbacksClick.registerCb( std::bind1st( std::mem_fun( callback ), obj ) ); }
+	CallbackId		registerClick( T *obj, bool (T::*callback)(void) ) { return callbacksClick.registerCb( std::bind( std::mem_fun( callback ), obj ) ); }
 	//! Unregisters a callback for Click events.
 	void			unregisterClick( CallbackId id ) { callbacksClick.unregisterCb( id ); }
 
