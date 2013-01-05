@@ -51,6 +51,13 @@ class ColumnControl;
 class PanelControl;
 class TextureVarControl;
 class ColorVarControl;
+
+template<typename T, unsigned int _size>
+class VectorVarControl;
+typedef VectorVarControl<float,2>   Vec2fVarControl;
+typedef VectorVarControl<float,3>   Vec3fVarControl;
+typedef VectorVarControl<float,4>   Vec4fVarControl;
+
 	
 //-----------------------------------------------------------------------------
 
@@ -107,8 +114,11 @@ public:
     DoubleVarControl* 	addParam(const std::string& paramName, double* var, double min=0, double max=1, double defaultValue = 0);
 	IntVarControl*		addParam(const std::string& paramName, int* var, int min=0, int max=1, int defaultValue = 0);
 	BoolVarControl*		addParam(const std::string& paramName, bool* var, bool defaultValue = false, int groupId = -1);
-	ColorVarControl*	addParam(const std::string& paramName, ColorA* var, ColorA const defaultValue = ColorA(0, 1, 1, 1), int colorModel = RGB);
-	TextureVarControl*	addParam(const std::string& paramName, gl::Texture* var, int scale = 1, bool flipVert = false);
+	ColorVarControl*	addParam(const std::string& paramName, ColorA* var, ColorA const defaultValue = ColorA(0.0f, 1.0f, 1.0f, 1.0f), int colorModel = RGB);
+    Vec2fVarControl*    addParam(const std::string& paramName, float* var, const Vec2f& min =Vec2f::zero(), const Vec2f& max =Vec2f(1.0f,1.0f));
+    Vec3fVarControl*    addParam(const std::string& paramName, float* var, const Vec3f& min =Vec3f::zero(), const Vec3f& max =Vec3f(1.0f,1.0f,1.0f));
+    Vec4fVarControl*    addParam(const std::string& paramName, float* var, const Vec4f& min =Vec4f::zero(), const Vec4f& max =Vec4f(1.0f,1.0f,1.0f,1.0f));
+	TextureVarControl*	addParam(const std::string& paramName, gl::Texture* var, int scale = 1, bool flipVert =false);
 	
 	ButtonControl*		addButton(const std::string& buttonName);
 	LabelControl*		addLabel(const std::string& labelName);	
@@ -132,6 +142,7 @@ public:
         DOUBLE_VAR,
 		INT_VAR,
 		BOOL_VAR,
+        VECTOR_VAR,
 		COLOR_VAR,
 		TEXTURE_VAR,
 		BUTTON,
@@ -146,11 +157,13 @@ public:
 	ColorA	bgColor;
 	Type	type;
 	std::string name;
+    gl::Texture labelTexture;
 	SimpleGUI* parentGui;
 	
-	Control();	
+	Control(Type name, const std::string& label);	
 	virtual ~Control() {};
 	void setBackgroundColor(ColorA color);	
+
 	void notifyUpdateListeners();
 	virtual Vec2f draw(Vec2f pos) = 0;
 	virtual std::string toString() { return ""; };
@@ -158,11 +171,29 @@ public:
 	virtual void onMouseDown(MouseEvent event) {};
 	virtual void onMouseUp(MouseEvent event) {};
 	virtual void onMouseDrag(MouseEvent event) {};
+    virtual void updateLabel( const std::string& label );
+};
+
+
+class CallbackControl : public Control {
+public:
+    CallbackControl(Type name, const std::string& label) : Control(name,label) {}
+    
+	CallbackId		registerCallback( std::function<bool (void)> callback ) { return callbacks.registerCb( callback ); }
+	template<typename T>
+	CallbackId		registerCallback( T *obj, bool (T::*callback)(void) ) { return callbacks.registerCb( std::bind( std::mem_fun( callback ), obj ) ); }
+	void			unregisterCallback( CallbackId id ) { callbacks.unregisterCb( id ); }
+    
+	void triggerCallback();
+    
+private:
+    CallbackMgr<bool (void)>		callbacks;
+
 };
 	
 //-----------------------------------------------------------------------------
 template<typename T>
-class NumberVarControl : public Control {
+class NumberVarControl : public CallbackControl {
 public:	
 	T* var;
 	T min;
@@ -170,7 +201,7 @@ public:
 public:
 	NumberVarControl(Control::Type type, const std::string& name, T* var, T min=0, T max=1, T defaultValue = 0);
 	float getNormalizedValue();
-	void setNormalizedValue(float value);
+	void setNormalizedValue(const float value, const bool silent =false);
 	Vec2f draw(Vec2f pos);
 	std::string toString();
 	void fromString(std::string& strValue);
@@ -198,10 +229,10 @@ public:
     : NumberVarControl<int>( Control::INT_VAR, name, var, min, max, defaultValue )
     {}
 };
-	
+
 //-----------------------------------------------------------------------------
 
-class BoolVarControl : public Control {
+class BoolVarControl : public CallbackControl {
 public:
 	bool* var;
 	int groupId;
@@ -211,11 +242,39 @@ public:
 	std::string toString();	
 	void fromString(std::string& strValue);
 	void onMouseDown(MouseEvent event);
+    
 };
-	
+
 //-----------------------------------------------------------------------------
 
-class ColorVarControl : public Control {
+class EnumVarControl : public CallbackControl {
+    
+};    
+    
+//-----------------------------------------------------------------------------
+
+template <typename T, unsigned int _size>
+class VectorVarControl : public CallbackControl {
+public:
+    T* var;
+    T max[_size];
+    T min[_size];
+    Rectf	elementArea[_size];
+    int		activeTrack;
+public:
+    VectorVarControl(const std::string& name, T* var, T min[_size], T max[_size]);
+    Vec2f draw(Vec2f pos);
+    float getNormalizedValue(const int element);
+	void setNormalizedValue(const int element, const float value, const bool silent =false);
+    virtual std::string toString();
+    virtual void fromString(std::string& strValue);    
+    void onMouseDown(MouseEvent event);	
+    void onMouseDrag(MouseEvent event);
+};
+    	
+//-----------------------------------------------------------------------------
+
+class ColorVarControl : public CallbackControl {
 public:
 	ColorA* var;
 	Rectf	activeArea1;
@@ -231,30 +290,21 @@ public:
 	void fromString(std::string& strValue); //expecting "r g b a"
 	void onMouseDown(MouseEvent event);	
 	void onMouseDrag(MouseEvent event);
+    void setValueForElement(const int element, const float value, const bool silent =false);
+    float getValueForElement(const int element);
 };
+
 	
 //-----------------------------------------------------------------------------
 
-class ButtonControl : public Control {
+class ButtonControl : public CallbackControl {
 private:
 	bool pressed;
-	CallbackMgr<bool (void)>		callbacksClick;
 public:
 	ButtonControl(const std::string& name);
 	Vec2f draw(Vec2f pos);
 	void onMouseDown(MouseEvent event);
 	void onMouseUp(MouseEvent event);
-
-	//! Registers a callback for Click events. Returns a unique identifier which can be used as a parameter to unregisterClick().
-	CallbackId		registerClick( std::function<bool (void)> callback ) { return callbacksClick.registerCb( callback ); }
-	//! Registers a callback for Click events. Returns a unique identifier which can be used as a parameter to unregisterClick().
-	template<typename T>
-	CallbackId		registerClick( T *obj, bool (T::*callback)(void) ) { return callbacksClick.registerCb( std::bind( std::mem_fun( callback ), obj ) ); }
-	//! Unregisters a callback for Click events.
-	void			unregisterClick( CallbackId id ) { callbacksClick.unregisterCb( id ); }
-
-	void fireClick();
-
 };
 
 //-----------------------------------------------------------------------------
@@ -303,6 +353,7 @@ public:
 	bool flipVert;	
 	TextureVarControl(const std::string& name, gl::Texture* var, int scale, bool flipVert = false);
 	Vec2f draw(Vec2f pos);	
+    void resetTexture( gl::Texture* var );
 };
 		
 //-----------------------------------------------------------------------------

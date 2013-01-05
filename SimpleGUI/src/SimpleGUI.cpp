@@ -115,6 +115,51 @@ ColorVarControl* SimpleGUI::addParam(const std::string& paramName, ColorA* var, 
 	return control;
 }
 
+Vec2fVarControl* SimpleGUI::addParam(const std::string& paramName, float* var, const Vec2f& min, const Vec2f& max) {
+    float _min[2];
+    _min[0] = min.x;
+    _min[1] = min.y;
+    float _max[2];
+    _max[0] = max.x;
+    _max[1] = max.y;
+    Vec2fVarControl* control = new Vec2fVarControl(paramName, var, _min, _max);
+    control->parentGui = this;	
+    controls.push_back(control);
+    return control;
+}
+
+Vec3fVarControl* SimpleGUI::addParam(const std::string& paramName, float* var, const Vec3f& min, const Vec3f& max) {
+    float _min[3];
+    _min[0] = min.x;
+    _min[1] = min.y;
+    _min[2] = min.z;
+    float _max[3];
+    _max[0] = max.x;
+    _max[1] = max.y;
+    _max[2] = max.z;
+    Vec3fVarControl* control = new Vec3fVarControl(paramName, var, _min, _max);
+    control->parentGui = this;	
+    controls.push_back(control);
+    return control;
+}
+
+Vec4fVarControl* SimpleGUI::addParam(const std::string& paramName, float* var, const Vec4f& min, const Vec4f& max) {
+    float _min[4];
+    _min[0] = min.x;
+    _min[1] = min.y;
+    _min[2] = min.z;
+    _min[3] = min.w;
+    float _max[4];
+    _max[0] = max.x;
+    _max[1] = max.y;
+    _max[2] = max.z;
+    _max[3] = max.w;
+    Vec4fVarControl* control = new Vec4fVarControl(paramName, var, _min, _max);
+    control->parentGui = this;	
+    controls.push_back(control);
+    return control;
+}
+
 TextureVarControl* SimpleGUI::addParam(const std::string& paramName, gl::Texture* var, int scale, bool flipVert) {
 	TextureVarControl* control = new TextureVarControl(paramName, var, scale, flipVert);
 	control->parentGui = this;	
@@ -345,20 +390,44 @@ Control* SimpleGUI::getControlByName(const std::string& name) {
 
 //-----------------------------------------------------------------------------
 	
-Control::Control() {
+Control::Control(Control::Type _type, const std::string& _name) 
+    : type(_type)
+    , name(_name)
+{
 	bgColor = ColorA(0,0,0,0.5);
+    activeArea = Rectf(0.0f,0.0f,0.0f,0.0f);
+    updateLabel(name);
 }
 
 void Control::setBackgroundColor(ColorA color) {
 	bgColor = color;
 }
+    
+    
+void CallbackControl::triggerCallback() {
+    bool handled = false;
+    for( CallbackMgr<bool (void)>::iterator cbIter = callbacks.begin(); ( cbIter != callbacks.end() ) && ( ! handled ); ++cbIter ) {
+        handled = (cbIter->second)();
+    }
+}
+    
+void Control::updateLabel( const std::string& label )
+{
+    TextLayout layout;
+    layout.clear( ColorA( 0.0f, 0.0f, 0.0f, 0.0f ) );
+    layout.setFont( SimpleGUI::textFont );
+    layout.setColor( SimpleGUI::textColor );
+    layout.setLeadingOffset( -2.0f );
+    layout.addLine( label );
+    labelTexture = gl::Texture( layout.render( true, false ) );
+}
 	
 //-----------------------------------------------------------------------------
-	
+
 template<typename T>
-NumberVarControl<T>::NumberVarControl(Control::Type type, const std::string& name, T* var, T min, T max, T defaultValue) {
-	this->type = type;
-	this->name = name;
+NumberVarControl<T>::NumberVarControl(Control::Type type, const std::string& name, T* var, T min, T max, T defaultValue) 
+: CallbackControl(type,name)
+{
 	this->var = var;
 	this->min = min;
 	this->max = max;
@@ -375,14 +444,21 @@ NumberVarControl<T>::NumberVarControl(Control::Type type, const std::string& nam
 	
 template<typename T>
 float NumberVarControl<T>::getNormalizedValue() {
-	return (*var - min)/(max - min);
+	return (float)(*var - min) / (float)(max - min);
 }
 
 template<typename T>
-void NumberVarControl<T>::setNormalizedValue(float value) {
+void NumberVarControl<T>::setNormalizedValue(const float value, const bool silent) {
 	T newValue = min + value*(max - min);
 	if (newValue != *var) {
 		*var = newValue;
+        if( silent == false )
+        {
+            triggerCallback();
+        }
+        std::stringstream ss;
+        ss <<  name << " " << *this->var;
+        updateLabel( ss.str() );
 	}
 }
     
@@ -403,9 +479,9 @@ Vec2f NumberVarControl<T>::draw(Vec2f pos) {
 		(pos + SimpleGUI::labelSize + SimpleGUI::sliderSize + SimpleGUI::padding*2).y)
 	);	
 	
-	std::stringstream ss;
-	ss <<  name << " " << *this->var;
-	gl::drawString(ss.str(), pos, SimpleGUI::textColor, SimpleGUI::textFont);
+    //gl::drawString(ss.str(), pos, SimpleGUI::textColor, SimpleGUI::textFont);
+    gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+    gl::draw( labelTexture, pos );
 	
 	gl::color(SimpleGUI::darkColor);
 	gl::drawSolidRect(activeArea);
@@ -427,6 +503,10 @@ std::string NumberVarControl<T>::toString() {
 template<typename T>
 void NumberVarControl<T>::fromString(std::string& strValue) {
 	*var = boost::lexical_cast<T>(strValue);
+    triggerCallback();
+    std::stringstream ss;
+	ss <<  name << " " << *this->var;
+    updateLabel( ss.str() );
 }
 	
 template<typename T>
@@ -440,12 +520,18 @@ void NumberVarControl<T>::onMouseDrag(MouseEvent event) {
 	value = math<float>::max(0.0, math<float>::min(value, 1.0));	
 	setNormalizedValue(value);
 }
+    
+// needed for definining template base class functions in cpp
+// see: http://stackoverflow.com/questions/312115/c-linking-errors-undefined-symbols-using-a-templated-class
+template class NumberVarControl<int>;
+template class NumberVarControl<float>;
+template class NumberVarControl<double>;
 	
 //-----------------------------------------------------------------------------
 	
-BoolVarControl::BoolVarControl(const std::string& name, bool* var, bool defaultValue, int groupId) {
-	this->type = Control::BOOL_VAR;
-	this->name = name;
+BoolVarControl::BoolVarControl(const std::string& name, bool* var, bool defaultValue, int groupId) 
+: CallbackControl(Control::BOOL_VAR,name)
+{
 	this->var = var;
 	this->groupId = groupId;
 	*var = defaultValue;
@@ -460,7 +546,9 @@ Vec2f BoolVarControl::draw(Vec2f pos) {
 		(pos + SimpleGUI::sliderSize + SimpleGUI::padding).x, 
 		(pos + SimpleGUI::sliderSize + SimpleGUI::padding).y)
 	);
-	gl::drawString(name, Vec2f(pos.x + SimpleGUI::sliderSize.y + SimpleGUI::padding.x*2, pos.y), SimpleGUI::textColor, SimpleGUI::textFont);					
+	//gl::drawString(name, Vec2f(pos.x + SimpleGUI::sliderSize.y + SimpleGUI::padding.x*2, pos.y), SimpleGUI::textColor, SimpleGUI::textFont);
+    gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+    gl::draw( labelTexture, Vec2f(pos.x + SimpleGUI::sliderSize.y + SimpleGUI::padding.x*2, pos.y) );
 	gl::color((*var) ? SimpleGUI::lightColor : SimpleGUI::darkColor);
 	gl::drawSolidRect(activeArea);
 	pos.y += SimpleGUI::sliderSize.y + SimpleGUI::spacing;	
@@ -476,6 +564,7 @@ std::string BoolVarControl::toString() {
 void BoolVarControl::fromString(std::string& strValue) {
 	int value = boost::lexical_cast<int>(strValue);	
 	*var = value ? true : false;
+    triggerCallback();
 }
 	
 void BoolVarControl::onMouseDown(MouseEvent event) {
@@ -489,16 +578,141 @@ void BoolVarControl::onMouseDown(MouseEvent event) {
 	else {
 		*this->var = ! *this->var;
 	}
+    triggerCallback();
 }
+    
+//-----------------------------------------------------------------------------
+
+template <typename T, unsigned int _size>
+VectorVarControl<T,_size>::VectorVarControl(const std::string& name, T* var, T min[_size], T max[_size]) 
+: CallbackControl(Control::VECTOR_VAR,name)
+{
+    this->var = var;
+    for (int i=0; i < _size; ++i)
+    {
+        this->min[i] = min[i];
+        this->max[i] = max[i];
+    }
+    activeTrack = 0;
+}
+    
+template <typename T, unsigned int _size>
+float VectorVarControl<T,_size>::getNormalizedValue(const int element) {
+    assert( element < _size );
+    return (float)(var[element] - min[element]) / (float)(max[element] - min[element]);
+}
+
+template <typename T, unsigned int _size>
+void VectorVarControl<T,_size>::setNormalizedValue(const int element, const float value, const bool silent) {
+    T newValue = min[element] + value*(max[element] - min[element]);
+    if (newValue != var[element]) {
+        var[element] = newValue;
+        if( silent == false )
+        {
+            triggerCallback();
+        }
+    }
+}
+
+template <typename T, unsigned int _size>
+Vec2f VectorVarControl<T,_size>::draw(Vec2f pos) {
+    for (int i=0; i < _size; ++i)
+    {
+        int count = i+1;
+        elementArea[i] = Rectf(
+                              pos.x, 
+                              pos.y + SimpleGUI::labelSize.y + SimpleGUI::sliderSize.y*i + SimpleGUI::padding.y*count, 
+                              pos.x + SimpleGUI::sliderSize.x, 
+                              pos.y + SimpleGUI::sliderSize.y*count + SimpleGUI::padding.y*count + SimpleGUI::labelSize.y
+                              );
+    }
+    
+    activeArea = Rectf(
+                       pos.x, 
+                       pos.y + SimpleGUI::labelSize.y, 
+                       pos.x + SimpleGUI::sliderSize.x, 
+                       pos.y + SimpleGUI::sliderSize.y*_size + SimpleGUI::padding.y*_size + SimpleGUI::labelSize.y
+                       );
+    
+    gl::color(SimpleGUI::bgColor);
+    gl::drawSolidRect(Rectf(
+                            (pos - SimpleGUI::padding).x, 
+                            (pos - SimpleGUI::padding).y, 
+                            (pos + SimpleGUI::sliderSize + SimpleGUI::padding).x, 
+                            (pos + SimpleGUI::labelSize + SimpleGUI::sliderSize*_size + SimpleGUI::padding*(_size+1)).y)
+                      );
+    
+    //gl::drawString(name, pos, SimpleGUI::textColor, SimpleGUI::textFont);
+    gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+    gl::draw(labelTexture, pos);
+    gl::color(SimpleGUI::darkColor);
+    for (int i=0; i < _size; ++i)
+    {
+        gl::drawSolidRect(elementArea[i]);
+    }
+    gl::color(SimpleGUI::lightColor);
+    for (int i=0; i < _size; ++i)
+    {
+        Rectf rect = SimpleGUI::getScaledWidthRectf(elementArea[i], getNormalizedValue(i));
+        gl::drawLine(Vec2f(rect.x2, rect.y1), Vec2f(rect.x2, rect.y2));	
+    }		
+    pos.y += SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y * _size + SimpleGUI::padding.y * (_size-1) + SimpleGUI::spacing;		
+    return pos;
+}
+
+template <typename T, unsigned int _size>
+std::string VectorVarControl<T,_size>::toString() {
+    std::stringstream ss;
+    for (int i=0; i < _size; ++i)
+    {
+        ss << var[i];
+        if( i < (_size-1) ) ss << " ";
+    }
+    return ss.str();
+}
+
+template <typename T, unsigned int _size>
+void VectorVarControl<T,_size>::fromString(std::string& strValue) {
+    std::vector<std::string> strs;
+    boost::split(strs, strValue, boost::is_any_of("\t "));
+    for (int i=0; i < _size; ++i)
+    {
+        var[i] = boost::lexical_cast<double>(strs[i]);
+    }
+}
+
+template <typename T, unsigned int _size>
+void VectorVarControl<T,_size>::onMouseDown(MouseEvent event) {	
+    for (int i=0; i < _size; ++i)
+    {
+        if (elementArea[i].contains(event.getPos())) 
+        {
+            activeTrack = i;
+            break;
+        }
+    }
+    onMouseDrag(event);
+}
+
+template <typename T, unsigned int _size>
+void VectorVarControl<T,_size>::onMouseDrag(MouseEvent event) {	
+    float value = (event.getPos().x - activeArea.x1)/(activeArea.x2 - activeArea.x1);
+    value = math<float>::max(0.0, math<float>::min(value, 1.0));	
+    setNormalizedValue(activeTrack, value);
+}
+    
+template class VectorVarControl<float,2>;
+template class VectorVarControl<float,3>;
+template class VectorVarControl<float,4>;
 	
 //-----------------------------------------------------------------------------
 
-ColorVarControl::ColorVarControl(const std::string& name, ColorA* var, ColorA defaultValue, int colorModel) {
-	this->type = Control::COLOR_VAR;
-	this->name = name;
+ColorVarControl::ColorVarControl(const std::string& name, ColorA* var, ColorA defaultValue, int colorModel) 
+: CallbackControl(Control::COLOR_VAR,name)
+{
 	this->var = var;
 	this->colorModel = colorModel;
-	*var = defaultValue;
+	//*var = defaultValue;
 	activeTrack = 0;
 }
 	
@@ -558,7 +772,9 @@ Vec2f ColorVarControl::draw(Vec2f pos) {
 		(pos + SimpleGUI::labelSize + SimpleGUI::sliderSize*4 + SimpleGUI::padding*5).y)
 	);
 	
-	gl::drawString(name, pos, SimpleGUI::textColor, SimpleGUI::textFont);	
+	//gl::drawString(name, pos, SimpleGUI::textColor, SimpleGUI::textFont);	
+    gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+    gl::draw(labelTexture, pos);
 	gl::color(SimpleGUI::darkColor);
 	gl::drawSolidRect(activeArea1);
 	gl::drawSolidRect(activeArea2);
@@ -613,31 +829,62 @@ void ColorVarControl::onMouseDrag(MouseEvent event) {
 	float value = (event.getPos().x - activeArea.x1)/(activeArea.x2 - activeArea.x1);
 	value = math<float>::max(0.0, math<float>::min(value, 1.0));	
 	
-	if (colorModel == SimpleGUI::RGB) {
-		switch (activeTrack) {
-			case 1: var->r = value; break;
-			case 2: var->g = value; break;
-			case 3: var->b = value; break;
-			case 4: var->a = value; break;				
-		}
-	}
-	else {
-		Vec3f hsv = rgbToHSV(*var);
-		switch (activeTrack) {
-			case 1: hsv.x = value; break;
-			case 2: hsv.y = value; break;
-			case 3: hsv.z = value; break;
-			case 4: var->a = value; break;				
-		}
-		*var = ColorA(CM_HSV, hsv.x, hsv.y, hsv.z, var->a);
-	}
+	setValueForElement(activeTrack, value);
+}
+    
+void ColorVarControl::setValueForElement(const int element, const float value, const bool silent) {
+    if (colorModel == SimpleGUI::RGB) {
+        switch (element) {
+            case 1: var->r = value; break;
+            case 2: var->g = value; break;
+            case 3: var->b = value; break;
+            case 4: var->a = value; break;				
+        }
+    }
+    else {
+        Vec3f hsv = rgbToHSV(*var);
+        switch (element) {
+            case 1: hsv.x = value; break;
+            case 2: hsv.y = value; break;
+            case 3: hsv.z = value; break;
+            case 4: var->a = value; break;				
+        }
+        *var = ColorA(CM_HSV, hsv.x, hsv.y, hsv.z, var->a);
+    }
+    
+    if( silent == false )
+    {
+        triggerCallback();
+    }
+}
+    
+float ColorVarControl::getValueForElement(const int element) {
+    if (colorModel == SimpleGUI::RGB) {
+        switch (element) {
+            case 1: return var->r;
+            case 2: return var->g;
+            case 3: return var->b;
+            case 4: return var->a;				
+        }
+    }
+    else {
+        Vec3f hsv = rgbToHSV(*var);
+        switch (element) {
+            case 1: return hsv.x;
+            case 2: return hsv.y;
+            case 3: return hsv.z;
+            case 4: return var->a;				
+        }
+    }
+    
+    return 0.0f;
 }
 	
 //-----------------------------------------------------------------------------	
 	
-ButtonControl::ButtonControl(const std::string& name) {
-	this->type = Control::BUTTON;
-	this->name = name;		
+ButtonControl::ButtonControl(const std::string& name)
+: CallbackControl(Control::BUTTON,name)
+{
 	this->pressed = false;
 }
 
@@ -660,32 +907,27 @@ Vec2f ButtonControl::draw(Vec2f pos) {
 	
 	gl::color(pressed ? SimpleGUI::lightColor : SimpleGUI::darkColor);
 	gl::drawSolidRect(activeArea);				
-	gl::drawString(name, Vec2f(pos.x + SimpleGUI::padding.x * 2, pos.y + floor(SimpleGUI::padding.y * 0.5)), pressed ? SimpleGUI::darkColor : SimpleGUI::textColor, SimpleGUI::textFont);					
+	//gl::drawString(name, Vec2f(pos.x + SimpleGUI::padding.x * 2, pos.y + floor(SimpleGUI::padding.y * 0.5)), pressed ? SimpleGUI::darkColor : SimpleGUI::textColor, SimpleGUI::textFont);	
+    gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+    gl::draw(labelTexture, Vec2f(pos.x + SimpleGUI::padding.x * 2, pos.y + floor(SimpleGUI::padding.y * 0.5)));
 	pos.y += SimpleGUI::sliderSize.y + SimpleGUI::spacing + SimpleGUI::padding.y;
 	return pos;
 }
 	
 void ButtonControl::onMouseDown(MouseEvent event) {
 	pressed = true;
-	fireClick();
+	triggerCallback();
 }
 	
 void ButtonControl::onMouseUp(MouseEvent event) {
 	pressed = false;	
 }
-	
-void ButtonControl::fireClick() {
-	bool handled = false;
-	for( CallbackMgr<bool (void)>::iterator cbIter = callbacksClick.begin(); ( cbIter != callbacksClick.end() ) && ( ! handled ); ++cbIter ) {
-		handled = (cbIter->second)();
-	}
-}
 
 //-----------------------------------------------------------------------------	
 
-LabelControl::LabelControl(const std::string& name) {
-	this->type = Control::LABEL;
-	this->name = name;		
+LabelControl::LabelControl(const std::string& name) 
+: Control(Control::LABEL,name)
+{
 }
 	
 void LabelControl::setText(const std::string& text) {
@@ -705,16 +947,18 @@ Vec2f LabelControl::draw(Vec2f pos) {
 		(pos + SimpleGUI::sliderSize + SimpleGUI::padding).x, 
 		(pos + SimpleGUI::labelSize + SimpleGUI::padding).y
 	));				
-	gl::drawString(name, pos, SimpleGUI::textColor, SimpleGUI::textFont);					
+	//gl::drawString(name, pos, SimpleGUI::textColor, SimpleGUI::textFont);	
+    gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+    gl::draw(labelTexture, pos);
 	pos.y += SimpleGUI::labelSize.y + SimpleGUI::spacing;		
 	return pos;
 }
 	
 //-----------------------------------------------------------------------------		
 	
-SeparatorControl::SeparatorControl() {
-	this->type = Control::SEPARATOR;
-	this->name = "Separator";	
+SeparatorControl::SeparatorControl() 
+: Control( Control::SEPARATOR, "Separator" )
+{
 }	
 	
 Vec2f SeparatorControl::draw(Vec2f pos) {
@@ -727,11 +971,12 @@ Vec2f SeparatorControl::draw(Vec2f pos) {
 	
 //-----------------------------------------------------------------------------		
 
-ColumnControl::ColumnControl(int x, int y) {
+ColumnControl::ColumnControl(int x, int y) 
+: Control( Control::COLUMN, "Column" )
+{
 	this->x = x;
 	this->y = y;
-	this->type = Control::COLUMN;
-	this->name = "Column";	
+    this->activeArea = Rectf(0.0f,0.0f,0.0f,0.0f);
 }	
 	
 Vec2f ColumnControl::draw(Vec2f pos) {
@@ -748,11 +993,11 @@ Vec2f ColumnControl::draw(Vec2f pos) {
 	
 //-----------------------------------------------------------------------------		
 	
-PanelControl::PanelControl() {
+PanelControl::PanelControl() 
+: Control( Control::PANEL, "Panel" )
+{
 	this->enabled = true;
-	this->type = Control::PANEL;
-	this->name = "Panel";
-}	
+}
 	
 Vec2f PanelControl::draw(Vec2f pos) {
 	return pos;
@@ -760,9 +1005,9 @@ Vec2f PanelControl::draw(Vec2f pos) {
 	
 //-----------------------------------------------------------------------------
 	
-TextureVarControl::TextureVarControl(const std::string& name, gl::Texture* var, int scale, bool flipVert) {
-	this->type = Control::TEXTURE_VAR;
-	this->name = name;
+TextureVarControl::TextureVarControl(const std::string& name, gl::Texture* var, int scale, bool flipVert) 
+: Control( Control::TEXTURE_VAR, name )
+{
 	this->var = var;
 	this->scale = scale;
 	this->flipVert = flipVert;
@@ -789,6 +1034,11 @@ Vec2f TextureVarControl::draw(Vec2f pos) {
 	gl::draw(*var, activeArea);	
 	pos.y += activeArea.getHeight() + SimpleGUI::spacing;
 	return pos;	
+}
+    
+void TextureVarControl::resetTexture( gl::Texture* var )
+{
+    this->var = var;
 }
 	
 //-----------------------------------------------------------------------------	
