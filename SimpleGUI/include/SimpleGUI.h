@@ -31,6 +31,7 @@
 #include "cinder/app/App.h"
 #include "cinder/Text.h"
 #include "cinder/gl/Texture.h"
+#include "cinder/gl/TextureFont.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -44,6 +45,7 @@ class FloatVarControl;
 class DoubleVarControl;
 class IntVarControl;
 class BoolVarControl;
+class EnumVarControl;
 class ButtonControl;
 class LabelControl;
 class SeparatorControl;
@@ -84,6 +86,7 @@ public:
 	static Vec2f labelSize;
 	static Vec2f separatorSize;
 	static Font textFont;
+    static ci::gl::TextureFontRef textureFont;
 	
 	enum {
 		RGB,
@@ -114,6 +117,7 @@ public:
     DoubleVarControl* 	addParam(const std::string& paramName, double* var, double min=0, double max=1, double defaultValue = 0);
 	IntVarControl*		addParam(const std::string& paramName, int* var, int min=0, int max=1, int defaultValue = 0);
 	BoolVarControl*		addParam(const std::string& paramName, bool* var, bool defaultValue = false, int groupId = -1);
+    EnumVarControl*		addParam(const std::string& paramName, int* var, std::vector<std::string>& enumOptions);
 	ColorVarControl*	addParam(const std::string& paramName, ColorA* var, ColorA const defaultValue = ColorA(0.0f, 1.0f, 1.0f, 1.0f), int colorModel = RGB);
     Vec2fVarControl*    addParam(const std::string& paramName, float* var, const Vec2f& min =Vec2f::zero(), const Vec2f& max =Vec2f(1.0f,1.0f));
     Vec3fVarControl*    addParam(const std::string& paramName, float* var, const Vec3f& min =Vec3f::zero(), const Vec3f& max =Vec3f(1.0f,1.0f,1.0f));
@@ -246,10 +250,18 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-
-class EnumVarControl : public CallbackControl {
+//
     
-};    
+class EnumVarControl : public IntVarControl {
+public:
+    std::vector<std::string> enumOptions;
+    std::vector<Rectf> elementAreas;
+public:
+    EnumVarControl(const std::string& name, int* var, std::vector<std::string>& options);
+    Vec2f draw(Vec2f pos);
+	void onMouseDown(MouseEvent event);
+    void onMouseDrag(MouseEvent event);
+};
     
 //-----------------------------------------------------------------------------
 

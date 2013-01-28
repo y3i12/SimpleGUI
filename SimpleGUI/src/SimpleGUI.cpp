@@ -40,9 +40,10 @@ namespace mowa { namespace sgui {
 //-----------------------------------------------------------------------------
 
 Font SimpleGUI::textFont = Font();
+ci::gl::TextureFontRef SimpleGUI::textureFont;
 ColorA SimpleGUI::darkColor = ColorA(0.3, 0.3, 0.3, 1);
 ColorA SimpleGUI::lightColor = ColorA(1, 1, 1, 1);
-ColorA SimpleGUI::bgColor = ColorA(0, 0, 0, 0.5);
+ColorA SimpleGUI::bgColor = ColorA(0.1, 0.1, 0.1, 0.5);
 ColorA SimpleGUI::textColor = ColorA(1,1,1,1);	
 float SimpleGUI::spacing = 7;
 Vec2f SimpleGUI::padding = Vec2f(3, 3);
@@ -72,6 +73,7 @@ SimpleGUI::~SimpleGUI() {
 	
 void SimpleGUI::init(App* app) {	
 	textFont = Font(loadResource("pf_tempesta_seven.ttf"), 8);
+    SimpleGUI::textureFont = ci::gl::TextureFont::create( textFont );
 	//textFont = Font("Arial", 12);
 	selectedControl = NULL;
 	cbMouseDown = app->registerMouseDown( this, &SimpleGUI::onMouseDown );
@@ -104,6 +106,14 @@ IntVarControl* SimpleGUI::addParam(const std::string& paramName, int* var, int m
 BoolVarControl* SimpleGUI::addParam(const std::string& paramName, bool* var, bool defaultValue, int groupId) {
 	BoolVarControl* control = new BoolVarControl(paramName, var, defaultValue, groupId);
 	control->parentGui = this;	
+	controls.push_back(control);
+	return control;
+}
+    
+EnumVarControl*	SimpleGUI::addParam(const std::string& paramName, int* var, std::vector<std::string>& enumOptions)
+{
+    EnumVarControl* control = new EnumVarControl(paramName, var, enumOptions);
+	control->parentGui = this;
 	controls.push_back(control);
 	return control;
 }
@@ -237,7 +247,7 @@ void SimpleGUI::draw() {
 		if (control->type == Control::COLUMN) {
 			if (currColumn == NULL) { //first column				
 				position.x = -SimpleGUI::labelSize.x;
-				//each column moves everything to the right so we want compensate that 
+				//each column moves everything to the right so we want compensate that
 				position.y = 0;
 			}
 			currColumn = (ColumnControl*)control;
@@ -538,7 +548,7 @@ BoolVarControl::BoolVarControl(const std::string& name, bool* var, bool defaultV
 }	
 
 Vec2f BoolVarControl::draw(Vec2f pos) {
-	activeArea = Rectf(pos.x, pos.y, pos.x + SimpleGUI::sliderSize.y, pos.y + SimpleGUI::sliderSize.y);	
+	activeArea = Rectf(pos.x, pos.y, pos.x + SimpleGUI::sliderSize.y, pos.y + SimpleGUI::sliderSize.y);
 	gl::color(SimpleGUI::bgColor);
 	gl::drawSolidRect(Rectf(
 		(pos - SimpleGUI::padding).x, 
@@ -579,6 +589,70 @@ void BoolVarControl::onMouseDown(MouseEvent event) {
 		*this->var = ! *this->var;
 	}
     triggerCallback();
+}
+    
+//-----------------------------------------------------------------------------
+
+EnumVarControl::EnumVarControl(const std::string& name, int* var, std::vector<std::string>& options)
+: IntVarControl(name, var, 0, options.size(), 0)
+, enumOptions(options)
+{
+    for (int i=0; i < options.size(); ++i) {
+        elementAreas.push_back(Rectf(0,0,1,1));
+    }
+}
+    
+Vec2f EnumVarControl::draw(Vec2f pos) {
+    // setup
+    float height = (enumOptions.size()+1) * (SimpleGUI::sliderSize.y + SimpleGUI::padding.y);
+    activeArea = Rectf(pos.x, pos.y, pos.x + SimpleGUI::sliderSize.x, pos.y + height);
+    Vec2f enumPos = pos;
+    enumPos.y += SimpleGUI::labelSize.y + SimpleGUI::padding.y;
+    for (int i=0; i < enumOptions.size(); ++i) {
+        elementAreas[i] = Rectf(enumPos.x,
+                                enumPos.y,
+                                enumPos.x + SimpleGUI::sliderSize.y,
+                                enumPos.y + SimpleGUI::sliderSize.y);
+        enumPos.y += SimpleGUI::sliderSize.y + SimpleGUI::padding.y;
+    }
+    
+    // draw label + bg
+    Rectf bgRect = Rectf(
+                         (pos - SimpleGUI::padding).x,
+                         (pos - SimpleGUI::padding).y,
+                         (pos + SimpleGUI::sliderSize + SimpleGUI::padding).x,
+                         (pos + SimpleGUI::labelSize + SimpleGUI::sliderSize*enumOptions.size() + SimpleGUI::padding*(enumOptions.size()+1)).y);
+    gl::color(SimpleGUI::bgColor);
+    gl::drawSolidRect(bgRect);
+    
+    gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+    gl::draw(labelTexture, pos);
+    
+    // draw options
+    for (int i=0; i < enumOptions.size(); ++i) {
+        gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
+        SimpleGUI::textureFont->drawString(enumOptions[i], Vec2f(elementAreas[i].x1 + SimpleGUI::sliderSize.y + SimpleGUI::padding.x*2, elementAreas[i].y2 - SimpleGUI::padding.y));
+        
+        gl::color((*var == i) ? SimpleGUI::lightColor : SimpleGUI::darkColor);
+        gl::drawSolidRect(elementAreas[i]);
+    }
+    pos.y += height + SimpleGUI::spacing;
+    return pos;
+}
+    
+void EnumVarControl::onMouseDown(MouseEvent event) {
+    //float height = SimpleGUI::sliderSize.y + (enumOptions.size() - 1) * (SimpleGUI::sliderSize.y + SimpleGUI::padding.y);
+    for (int i=0; i < enumOptions.size(); ++i) {
+        if (elementAreas[i].contains(event.getPos())) {
+            *this->var = i;
+            break;
+        }
+    }
+    triggerCallback();
+}
+    
+void EnumVarControl::onMouseDrag(MouseEvent event) {
+    return;
 }
     
 //-----------------------------------------------------------------------------
