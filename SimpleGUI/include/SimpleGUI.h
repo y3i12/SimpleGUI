@@ -24,6 +24,7 @@
 //
 // Temptesta Seven font by Yusuke Kamiyamane http://p.yusukekamiyamane.com/fonts/
 // "The fonts can be used free for any personal or commercial projects."
+/*Kira's Notes: use multiple window in mainApp, assigned each window, it is instance of simpleGUI*/
 
 #pragma once
 
@@ -34,6 +35,7 @@
 
 using namespace ci;
 using namespace ci::app;
+
 
 namespace mowa { namespace sgui {
 	
@@ -55,16 +57,15 @@ class ColorVarControl;
 
 class SimpleGUI {
 private:
+
 	bool enabled;
 	Vec2f	mousePos;
 	std::vector<Control*> controls;
 	Control* selectedControl;
-	
-	CallbackId	cbMouseDown;
-	CallbackId	cbMouseUp;
-	CallbackId  cbMouseDrag;	
+	//instead of using cinder app for listenr, use window app
+	ci::signals::scoped_connection	mCbMouseDown, mCbMouseDrag,mCbMouseUp;
 
-	void	init(App* app);	
+	void	init(ci::app::WindowRef window);	
 public:
 	static ColorA darkColor;
 	static ColorA lightColor;
@@ -82,7 +83,8 @@ public:
 		HSV
 	};
 public:
-	SimpleGUI(App* app);
+	
+	SimpleGUI(app::WindowRef);
 	bool	isSelected() { return selectedControl != NULL; }
 	std::vector<Control*>& getControls() { return controls; }	
 	

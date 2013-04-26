@@ -24,16 +24,23 @@
 //
 // Temptesta Seven font by Yusuke Kamiyamane http://p.yusukekamiyamane.com/fonts/
 // "The fonts can be used free for any personal or commercial projects."
+/**
+modified by: Ishyca
+Fix: - window resource loading
+	 - register mouse and key event 
+	 - multiple window
+**/
 
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-#include "SimpleGUI.h"
+#include "../include/SimpleGUI.h"
 #include "cinder/Utilities.h"
 #include "cinder/Font.h"
 #include "cinder/CinderMath.h"
+#include "Resources.h"
 
 namespace mowa { namespace sgui {
 	
@@ -50,19 +57,26 @@ Vec2f SimpleGUI::sliderSize = Vec2f(125, 10);
 Vec2f SimpleGUI::labelSize = Vec2f(125, 10);
 Vec2f SimpleGUI::separatorSize = Vec2f(125, 1);
 	
-SimpleGUI::SimpleGUI(App* app) {
-	init(app);
+SimpleGUI::SimpleGUI(app::WindowRef window ){
+	init(window);
 	enabled = true;
 }
-	
-void SimpleGUI::init(App* app) {	
-	textFont = Font(loadResource("pf_tempesta_seven.ttf"), 8);
+
+void SimpleGUI::init(app::WindowRef window){	
+	textFont = Font( loadResource(RES_FONT), 8);
 	//textFont = Font("Arial", 12);
 	selectedControl = NULL;
-	cbMouseDown = app->registerMouseDown( this, &SimpleGUI::onMouseDown );
+
+	mCbMouseDown = window->getSignalMouseDown().connect( std::bind( &SquareListener::mouseDown, this, std::_1 ) );
+	mCbMouseDrag = window->getSignalMouseDrag().connect( std::bind( &SquareListener::mouseDrag, this, std::_1 ) );	
+	mCbMouseUp   = window->getSignalMouseUp().connect();
+	/*cbMouseDown = app->registerMouseDown( this, &SimpleGUI::onMouseDown );
 	cbMouseUp = app->registerMouseUp( this, &SimpleGUI::onMouseUp );	
 	cbMouseDrag = app->registerMouseDrag( this, &SimpleGUI::onMouseDrag );
+	*/
 }
+
+
 
 FloatVarControl* SimpleGUI::addParam(const std::string& paramName, float* var, float min, float max, float defaultValue) {
 	FloatVarControl* control = new FloatVarControl(paramName, var, min, max, defaultValue);
