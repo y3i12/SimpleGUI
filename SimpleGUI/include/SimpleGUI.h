@@ -57,7 +57,6 @@ class ColorVarControl;
 
 class SimpleGUI {
 private:
-
 	bool enabled;
 	Vec2f	mousePos;
 	std::vector<Control*> controls;
