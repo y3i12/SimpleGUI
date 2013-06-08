@@ -441,15 +441,6 @@ NumberVarControl<T>::NumberVarControl(Control::Type type, const std::string& nam
 	this->var = var;
 	this->min = min;
 	this->max = max;
-	if (defaultValue < min) {
-		*var = min;
-	}
-	else if (defaultValue > max) {
-		*var = max;
-	}
-	else {
-		*var = defaultValue;
-	}
 }
 	
 template<typename T>
@@ -594,7 +585,7 @@ void BoolVarControl::onMouseDown(MouseEvent event) {
 //-----------------------------------------------------------------------------
 
 EnumVarControl::EnumVarControl(const std::string& name, int* var, std::vector<std::string>& options)
-: IntVarControl(name, var, 0, options.size(), 0)
+: IntVarControl(name, var, 0, options.size()-1, 0)
 , enumOptions(options)
 {
     for (int i=0; i < options.size(); ++i) {
@@ -1080,7 +1071,7 @@ Vec2f PanelControl::draw(Vec2f pos) {
 //-----------------------------------------------------------------------------
 	
 TextureVarControl::TextureVarControl(const std::string& name, gl::Texture* var, int scale, bool flipVert) 
-: Control( Control::TEXTURE_VAR, name )
+: CallbackControl( Control::TEXTURE_VAR, name )
 {
 	this->var = var;
 	this->scale = scale;
@@ -1113,6 +1104,10 @@ Vec2f TextureVarControl::draw(Vec2f pos) {
 void TextureVarControl::resetTexture( gl::Texture* var )
 {
     this->var = var;
+}
+    
+void TextureVarControl::onMouseDown(MouseEvent event) {
+    triggerCallback();
 }
 	
 //-----------------------------------------------------------------------------	

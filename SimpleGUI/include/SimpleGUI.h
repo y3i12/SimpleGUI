@@ -358,7 +358,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class TextureVarControl : public Control {
+class TextureVarControl : public CallbackControl {
 public:
 	gl::Texture* var;
 	float scale;
@@ -366,6 +366,7 @@ public:
 	TextureVarControl(const std::string& name, gl::Texture* var, int scale, bool flipVert = false);
 	Vec2f draw(Vec2f pos);	
     void resetTexture( gl::Texture* var );
+    void onMouseDown(MouseEvent event);
 };
 		
 //-----------------------------------------------------------------------------
