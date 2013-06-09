@@ -59,9 +59,9 @@ SimpleGUI::SimpleGUI(App* app) {
 SimpleGUI::~SimpleGUI() {
 	std::cout << "Removing gui " << std::endl;
 	selectedControl = NULL;
-	ci::app::App::get()->unregisterMouseDown( cbMouseDown );
-	ci::app::App::get()->unregisterMouseUp( cbMouseUp );
-	ci::app::App::get()->unregisterMouseDrag( cbMouseDrag );
+	cnMouseDown.disconnect();
+    cnMouseUp.disconnect();
+    cnMouseDrag.disconnect();
     
     for (std::vector<Control*>::iterator it = controls.begin(); 
          it != controls.end();
@@ -76,9 +76,9 @@ void SimpleGUI::init(App* app) {
     SimpleGUI::textureFont = ci::gl::TextureFont::create( textFont );
 	//textFont = Font("Arial", 12);
 	selectedControl = NULL;
-	cbMouseDown = app->registerMouseDown( this, &SimpleGUI::onMouseDown );
-	cbMouseUp = app->registerMouseUp( this, &SimpleGUI::onMouseUp );	
-	cbMouseDrag = app->registerMouseDrag( this, &SimpleGUI::onMouseDrag );
+	cnMouseDown = app->getWindow()->getSignalMouseDown().connect( std::bind( &SimpleGUI::onMouseDown, this, std::_1 ) );
+	cnMouseUp = app->getWindow()->getSignalMouseDown().connect( std::bind( &SimpleGUI::onMouseUp, this, std::_1 ) );
+	cnMouseDrag = app->getWindow()->getSignalMouseDown().connect( std::bind( &SimpleGUI::onMouseDrag, this, std::_1 ) );
 }
 
 FloatVarControl* SimpleGUI::addParam(const std::string& paramName, float* var, float min, float max, float defaultValue) {

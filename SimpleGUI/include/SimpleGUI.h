@@ -70,9 +70,9 @@ private:
 	std::vector<Control*> controls;
 	Control* selectedControl;
 	
-	CallbackId	cbMouseDown;
-	CallbackId	cbMouseUp;
-	CallbackId  cbMouseDrag;	
+	signals::connection	cnMouseDown;
+	signals::connection	cnMouseUp;
+	signals::connection cnMouseDrag;
 
 	void	init(App* app);	
 public:
