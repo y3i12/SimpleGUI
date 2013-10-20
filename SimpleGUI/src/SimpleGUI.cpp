@@ -77,8 +77,8 @@ void SimpleGUI::init(App* app) {
 	//textFont = Font("Arial", 12);
 	selectedControl = NULL;
 	cnMouseDown = app->getWindow()->getSignalMouseDown().connect( std::bind( &SimpleGUI::onMouseDown, this, std::_1 ) );
-	cnMouseUp = app->getWindow()->getSignalMouseDown().connect( std::bind( &SimpleGUI::onMouseUp, this, std::_1 ) );
-	cnMouseDrag = app->getWindow()->getSignalMouseDown().connect( std::bind( &SimpleGUI::onMouseDrag, this, std::_1 ) );
+	cnMouseUp = app->getWindow()->getSignalMouseUp().connect( std::bind( &SimpleGUI::onMouseUp, this, std::_1 ) );
+	cnMouseDrag = app->getWindow()->getSignalMouseDrag().connect( std::bind( &SimpleGUI::onMouseDrag, this, std::_1 ) );
 }
 
 FloatVarControl* SimpleGUI::addParam(const std::string& paramName, float* var, float min, float max, float defaultValue) {
@@ -414,11 +414,12 @@ void Control::setBackgroundColor(ColorA color) {
 }
     
     
-void CallbackControl::triggerCallback() {
+bool CallbackControl::triggerCallback() {
     bool handled = false;
     for( CallbackMgr<bool (void)>::iterator cbIter = callbacks.begin(); ( cbIter != callbacks.end() ) && ( ! handled ); ++cbIter ) {
         handled = (cbIter->second)();
     }
+    return handled;
 }
     
 void Control::updateLabel( const std::string& label )
@@ -981,7 +982,10 @@ Vec2f ButtonControl::draw(Vec2f pos) {
 	
 void ButtonControl::onMouseDown(MouseEvent event) {
 	pressed = true;
-	triggerCallback();
+    bool handled = triggerCallback();
+	if (handled) {
+        pressed = false;
+    }
 }
 	
 void ButtonControl::onMouseUp(MouseEvent event) {

@@ -188,7 +188,7 @@ public:
 	CallbackId		registerCallback( T *obj, bool (T::*callback)(void) ) { return callbacks.registerCb( std::bind( std::mem_fun( callback ), obj ) ); }
 	void			unregisterCallback( CallbackId id ) { callbacks.unregisterCb( id ); }
     
-	void triggerCallback();
+	bool triggerCallback();
     
 private:
     CallbackMgr<bool (void)>		callbacks;
