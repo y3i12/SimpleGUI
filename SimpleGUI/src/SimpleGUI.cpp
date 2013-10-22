@@ -62,6 +62,7 @@ SimpleGUI::~SimpleGUI() {
 	cnMouseDown.disconnect();
     cnMouseUp.disconnect();
     cnMouseDrag.disconnect();
+    cnMouseWheel.disconnect();
     
     for (std::vector<Control*>::iterator it = controls.begin(); 
          it != controls.end();
@@ -79,6 +80,7 @@ void SimpleGUI::init(App* app) {
 	cnMouseDown = app->getWindow()->getSignalMouseDown().connect( std::bind( &SimpleGUI::onMouseDown, this, std::_1 ) );
 	cnMouseUp = app->getWindow()->getSignalMouseUp().connect( std::bind( &SimpleGUI::onMouseUp, this, std::_1 ) );
 	cnMouseDrag = app->getWindow()->getSignalMouseDrag().connect( std::bind( &SimpleGUI::onMouseDrag, this, std::_1 ) );
+    cnMouseWheel = app->getWindow()->getSignalMouseWheel().connect( std::bind( &SimpleGUI::onMouseWheel, this, std::_1 ) );
 }
 
 FloatVarControl* SimpleGUI::addParam(const std::string& paramName, float* var, float min, float max, float defaultValue) {
@@ -368,6 +370,23 @@ bool SimpleGUI::onMouseDrag(MouseEvent event) {
 	}
 	return false;
 }
+    
+bool SimpleGUI::onMouseWheel(MouseEvent event) {
+    if (!enabled) return false;
+    
+    std::vector<Control*>::iterator it = controls.begin();
+	while(it != controls.end()) {
+		Control* control = *it;
+		if(control) {
+			if (control->activeArea.contains(event.getPos())) {
+				control->onMouseWheel(event);
+				return true;
+			}
+		}
+		it++;
+	}
+    return false;
+}
 	
 Vec2f SimpleGUI::getStringSize(const std::string& str) {
 	TextLayout text;
@@ -442,6 +461,10 @@ NumberVarControl<T>::NumberVarControl(Control::Type type, const std::string& nam
 	this->var = var;
 	this->min = min;
 	this->max = max;
+    
+    std::stringstream ss;
+    ss <<  name << " " << *this->var;
+    updateLabel( ss.str() );
 }
 	
 template<typename T>
@@ -518,9 +541,20 @@ void NumberVarControl<T>::onMouseDown(MouseEvent event) {
 
 template<typename T>
 void NumberVarControl<T>::onMouseDrag(MouseEvent event) {
-	float value = (event.getPos().x - activeArea.x1)/(activeArea.x2 - activeArea.x1);
-	value = math<float>::max(0.0, math<float>::min(value, 1.0));	
-	setNormalizedValue(value);
+    float value = (event.getPos().x - activeArea.x1)/(activeArea.x2 - activeArea.x1);
+    value = math<float>::max(0.0, math<float>::min(value, 1.0));
+    setNormalizedValue(value);
+}
+    
+template<typename T>
+void NumberVarControl<T>::onMouseWheel(MouseEvent event) {
+    const float step = (max - min) / 100.0f;
+	const float delta = event.getWheelIncrement() * step;
+	*var += delta;
+	triggerCallback();
+    std::stringstream ss;
+    ss <<  name << " " << *this->var;
+    updateLabel( ss.str() );
 }
     
 // needed for definining template base class functions in cpp
@@ -767,6 +801,22 @@ void VectorVarControl<T,_size>::onMouseDrag(MouseEvent event) {
     setNormalizedValue(activeTrack, value);
 }
     
+template <typename T, unsigned int _size>
+void VectorVarControl<T,_size>::onMouseWheel(MouseEvent event) {
+    for (int i=0; i < _size; ++i)
+    {
+        if (elementArea[i].contains(event.getPos()))
+        {
+            activeTrack = i;
+            break;
+        }
+    }
+    const float step = (max[activeTrack] - min[activeTrack]) / 100.0f;
+	const float delta = event.getWheelIncrement() * step;
+	var[activeTrack] += delta;
+	triggerCallback();
+}
+    
 template class VectorVarControl<float,2>;
 template class VectorVarControl<float,3>;
 template class VectorVarControl<float,4>;
@@ -897,6 +947,26 @@ void ColorVarControl::onMouseDrag(MouseEvent event) {
 	
 	setValueForElement(activeTrack, value);
 }
+
+void ColorVarControl::onMouseWheel(MouseEvent event) {
+    if (activeArea1.contains(event.getPos())) {
+		activeTrack = 1;
+	}
+	else if (activeArea2.contains(event.getPos())) {
+		activeTrack = 2;
+	}
+	else if (activeArea3.contains(event.getPos())) {
+		activeTrack = 3;
+	}
+	else if (activeArea4.contains(event.getPos())) {
+		activeTrack = 4;
+	}
+    const float step = 0.01f;
+    const float delta = event.getWheelIncrement() * step;
+    var[activeTrack] += delta;
+    triggerCallback();
+}
+
     
 void ColorVarControl::setValueForElement(const int element, const float value, const bool silent) {
     if (colorModel == SimpleGUI::RGB) {

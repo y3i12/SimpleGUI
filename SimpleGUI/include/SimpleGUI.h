@@ -73,8 +73,9 @@ private:
 	signals::connection	cnMouseDown;
 	signals::connection	cnMouseUp;
 	signals::connection cnMouseDrag;
+    signals::connection cnMouseWheel;
 
-	void	init(App* app);	
+	void	init(App* app);
 public:
 	static ColorA darkColor;
 	static ColorA lightColor;
@@ -102,6 +103,7 @@ public:
 	bool	onMouseDown(MouseEvent event);
 	bool	onMouseUp(MouseEvent event);
 	bool	onMouseDrag(MouseEvent event);
+	bool	onMouseWheel(MouseEvent event);
 	
 	void	draw();
 	void	dump();
@@ -175,6 +177,7 @@ public:
 	virtual void onMouseDown(MouseEvent event) {};
 	virtual void onMouseUp(MouseEvent event) {};
 	virtual void onMouseDrag(MouseEvent event) {};
+	virtual void onMouseWheel(MouseEvent event) {};
     virtual void updateLabel( const std::string& label );
 };
 
@@ -211,6 +214,7 @@ public:
 	void fromString(std::string& strValue);
 	void onMouseDown(MouseEvent event);	
 	void onMouseDrag(MouseEvent event);
+    void onMouseWheel(MouseEvent event);
 };
     
 class FloatVarControl : public NumberVarControl<float> {
@@ -282,6 +286,7 @@ public:
     virtual void fromString(std::string& strValue);    
     void onMouseDown(MouseEvent event);	
     void onMouseDrag(MouseEvent event);
+    void onMouseWheel(MouseEvent event);
 };
     	
 //-----------------------------------------------------------------------------
@@ -302,6 +307,7 @@ public:
 	void fromString(std::string& strValue); //expecting "r g b a"
 	void onMouseDown(MouseEvent event);	
 	void onMouseDrag(MouseEvent event);
+    void onMouseWheel(MouseEvent event);
     void setValueForElement(const int element, const float value, const bool silent =false);
     float getValueForElement(const int element);
 };
