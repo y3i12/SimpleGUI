@@ -901,14 +901,17 @@ Vec2f ColorVarControl::draw(Vec2f pos) {
 	gl::drawSolidRect(activeArea2);
 	gl::drawSolidRect(activeArea3);
 	gl::drawSolidRect(activeArea4);
-	gl::color(SimpleGUI::lightColor);
 	Rectf rect1 = SimpleGUI::getScaledWidthRectf(activeArea1, values.x);
 	Rectf rect2 = SimpleGUI::getScaledWidthRectf(activeArea2, values.y);
 	Rectf rect3 = SimpleGUI::getScaledWidthRectf(activeArea3, values.z);
 	Rectf rect4 = SimpleGUI::getScaledWidthRectf(activeArea4, values.w);
-	gl::drawLine(Vec2f(rect1.x2, rect1.y1), Vec2f(rect1.x2, rect1.y2));				
-	gl::drawLine(Vec2f(rect2.x2, rect2.y1), Vec2f(rect2.x2, rect2.y2));				
-	gl::drawLine(Vec2f(rect3.x2, rect3.y1), Vec2f(rect3.x2, rect3.y2));				
+    gl::color(1.0f,0.0f,0.0f);
+	gl::drawLine(Vec2f(rect1.x2, rect1.y1), Vec2f(rect1.x2, rect1.y2));
+    gl::color(0.0f,1.0f,0.0f);
+	gl::drawLine(Vec2f(rect2.x2, rect2.y1), Vec2f(rect2.x2, rect2.y2));
+    gl::color(0.0f,0.0f,1.0f);
+	gl::drawLine(Vec2f(rect3.x2, rect3.y1), Vec2f(rect3.x2, rect3.y2));
+    gl::color(SimpleGUI::lightColor);
 	gl::drawLine(Vec2f(rect4.x2, rect4.y1), Vec2f(rect4.x2, rect4.y2));				
 	pos.y += SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y * 4 + SimpleGUI::padding.y * 3 + SimpleGUI::spacing;		
 	return pos;
@@ -968,7 +971,11 @@ void ColorVarControl::onMouseWheel(MouseEvent event) {
 	}
     const float step = 0.01f;
     const float delta = event.getWheelIncrement() * step;
-    setValueForElement(activeTrack, getValueForElement(activeTrack)+delta, false);
+    float value = getValueForElement(activeTrack);
+    float newValue = math<float>::clamp(value+delta);
+    if (newValue != value) {
+        setValueForElement(activeTrack, newValue, false);
+    }
 }
 
     
