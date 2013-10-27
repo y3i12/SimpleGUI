@@ -550,7 +550,8 @@ template<typename T>
 void NumberVarControl<T>::onMouseWheel(MouseEvent event) {
     const float step = (max - min) / 100.0f;
 	const float delta = event.getWheelIncrement() * step;
-	*var += delta;
+    float newValue = *var + delta;
+	*var = math<float>::clamp(newValue,min,max);
 	triggerCallback();
     std::stringstream ss;
     ss <<  name << " " << *this->var;
@@ -813,8 +814,12 @@ void VectorVarControl<T,_size>::onMouseWheel(MouseEvent event) {
     }
     const float step = (max[activeTrack] - min[activeTrack]) / 100.0f;
 	const float delta = event.getWheelIncrement() * step;
-	var[activeTrack] += delta;
-	triggerCallback();
+    float newValue = var[activeTrack] + delta;
+	var[activeTrack] = math<float>::clamp(newValue,min[activeTrack],max[activeTrack]);
+    if (var[activeTrack] == newValue)
+    {
+        triggerCallback();
+    }
 }
     
 template class VectorVarControl<float,2>;
@@ -963,8 +968,7 @@ void ColorVarControl::onMouseWheel(MouseEvent event) {
 	}
     const float step = 0.01f;
     const float delta = event.getWheelIncrement() * step;
-    var[activeTrack] += delta;
-    triggerCallback();
+    setValueForElement(activeTrack, getValueForElement(activeTrack)+delta, false);
 }
 
     
