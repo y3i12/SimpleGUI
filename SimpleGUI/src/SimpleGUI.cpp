@@ -77,9 +77,8 @@ SimpleGUI::~SimpleGUI() {
 }
 	
 void SimpleGUI::init(App* app) {	
-	textFont = Font(loadResource("pf_tempesta_seven.ttf"), 8);
+    textFont = Font("PF Tempesta Seven",8);
     SimpleGUI::textureFont = ci::gl::TextureFont::create( textFont );
-	//textFont = Font("Arial", 12);
 	selectedControl = NULL;
 	cnMouseDown = app->getWindow()->getSignalMouseDown().connect( std::bind( &SimpleGUI::onMouseDown, this, std::_1 ) );
 	cnMouseUp = app->getWindow()->getSignalMouseUp().connect( std::bind( &SimpleGUI::onMouseUp, this, std::_1 ) );
