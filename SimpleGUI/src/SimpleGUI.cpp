@@ -675,10 +675,13 @@ void EnumVarControl::onMouseDown(MouseEvent event) {
     for (int i=0; i < enumOptions.size(); ++i) {
         if (elementAreas[i].contains(event.getPos())) {
             *this->var = i;
+            triggerCallback();
+            std::stringstream ss;
+            ss <<  name << " " << *this->var;
+            updateLabel( ss.str() );
             break;
         }
     }
-    triggerCallback();
 }
     
 void EnumVarControl::onMouseDrag(MouseEvent event) {
