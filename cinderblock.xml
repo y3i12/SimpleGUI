@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<cinder>
+<block
+	name="SimpleGUI iOS"
+	id="com.marcinignac.simplegui"
+	author="Marcin Ignac, Tom Carden"
+	summary="Collection of my C++ classes that I use together with CinderLib"
+	license="BSD"
+	git="https://github.com/vorg/MowaLibs.git"
+	version="0.1"
+	libraryUrl="http://marcinignac.com/blog/simplegui/"
+	>
+	
+	<headerPattern>SimpleGUI/include/*.h</headerPattern>
+	<sourcePattern>SimpleGUI/src/*.cpp</sourcePattern>
+	<resource>SimpleGUI/resources/pf_tempesta_seven.ttf</resource>
+
+	<platform os="msw">
+		<includePath system="false">SimpleGUI/include</includePath>
+	</platform>
+
+</block>
+</cinder>
