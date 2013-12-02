@@ -39,16 +39,16 @@ namespace mowa { namespace sgui {
 	
 //-----------------------------------------------------------------------------
 
-Font SimpleGUI::textFont = Font();
-ColorA SimpleGUI::darkColor = ColorA(0.3, 0.3, 0.3, 1);
-ColorA SimpleGUI::lightColor = ColorA(1, 1, 1, 1);
-ColorA SimpleGUI::bgColor = ColorA(0, 0, 0, 0.5);
-ColorA SimpleGUI::textColor = ColorA(1,1,1,1);	
-float SimpleGUI::spacing = 7;
-Vec2f SimpleGUI::padding = Vec2f(3, 3);
-Vec2f SimpleGUI::sliderSize = Vec2f(125, 10);
-Vec2f SimpleGUI::labelSize = Vec2f(125, 10);
-Vec2f SimpleGUI::separatorSize = Vec2f(125, 1);
+Font   SimpleGUI::textFont      = Font();
+ColorA SimpleGUI::darkColor     = ColorA(0.3f, 0.3f, 0.3f, 1.0f);
+ColorA SimpleGUI::lightColor    = ColorA(1.0f, 1.0f, 1.0f, 1.0f);
+ColorA SimpleGUI::bgColor       = ColorA(0.0f, 0.0f, 0.0f, 0.5f);
+ColorA SimpleGUI::textColor     = ColorA(1.0f,1.0f,1.0f,1.0f);	
+float  SimpleGUI::spacing       = 7.0f;
+Vec2f  SimpleGUI::padding       = Vec2f(3.0f, 3.0f);
+Vec2f  SimpleGUI::sliderSize    = Vec2f(125.0f, 10.0f);
+Vec2f  SimpleGUI::labelSize     = Vec2f(125.0f, 10.0f);
+Vec2f  SimpleGUI::separatorSize = Vec2f(125.0f, 1.0f);
 	
 SimpleGUI::SimpleGUI(App* app) {
 	init(app);
@@ -56,85 +56,101 @@ SimpleGUI::SimpleGUI(App* app) {
 }
 	
 void SimpleGUI::init(App* app) {	
-	textFont = Font(loadResource("pf_tempesta_seven.ttf"), 8);
-	//textFont = Font("Arial", 12);
+  textFont = Font("Consolas", 8);
 	selectedControl = NULL;
-	cbMouseDown = app->registerMouseDown( this, &SimpleGUI::onMouseDown );
-	cbMouseUp = app->registerMouseUp( this, &SimpleGUI::onMouseUp );	
-	cbMouseDrag = app->registerMouseDrag( this, &SimpleGUI::onMouseDrag );
 }
 
-FloatVarControl* SimpleGUI::addParam(const std::string& paramName, float* var, float min, float max, float defaultValue) {
+FloatVarControl* SimpleGUI::addParam(const std::string& paramName, float* var, float min, float max, float defaultValue) 
+{
 	FloatVarControl* control = new FloatVarControl(paramName, var, min, max, defaultValue);
 	control->parentGui = this;
 	controls.push_back(control);
 	return control;
 }
 
-IntVarControl* SimpleGUI::addParam(const std::string& paramName, int* var, int min, int max, int defaultValue) {
+
+DoubleVarControl* SimpleGUI::addParam(const std::string& paramName, double* var, double min, double max, double defaultValue)
+{
+	DoubleVarControl* control = new DoubleVarControl(paramName, var, min, max, defaultValue);
+	control->parentGui = this;
+	controls.push_back(control);
+	return control;
+}
+
+IntVarControl* SimpleGUI::addParam(const std::string& paramName, int* var, int min, int max, int defaultValue) 
+{
 	IntVarControl* control = new IntVarControl(paramName, var, min, max, defaultValue);
 	control->parentGui = this;	
 	controls.push_back(control);
 	return control;
 }
 
-BoolVarControl* SimpleGUI::addParam(const std::string& paramName, bool* var, bool defaultValue, int groupId) {
+BoolVarControl* SimpleGUI::addParam(const std::string& paramName, bool* var, bool defaultValue, int groupId) 
+{
 	BoolVarControl* control = new BoolVarControl(paramName, var, defaultValue, groupId);
 	control->parentGui = this;	
 	controls.push_back(control);
 	return control;
 }
 	
-ColorVarControl* SimpleGUI::addParam(const std::string& paramName, ColorA* var, ColorA defaultValue, int colorModel) {
+ColorVarControl* SimpleGUI::addParam(const std::string& paramName, ColorA* var, ColorA defaultValue, int colorModel) 
+{
 	ColorVarControl* control = new ColorVarControl(paramName, var, defaultValue, colorModel);
 	control->parentGui = this;	
 	controls.push_back(control);
 	return control;
 }
 
-TextureVarControl* SimpleGUI::addParam(const std::string& paramName, gl::Texture* var, int scale, bool flipVert) {
+TextureVarControl* SimpleGUI::addParam(const std::string& paramName, gl::Texture* var, int scale, bool flipVert) 
+{
 	TextureVarControl* control = new TextureVarControl(paramName, var, scale, flipVert);
 	control->parentGui = this;	
 	controls.push_back(control);
 	return control;
 }
 
-ButtonControl* SimpleGUI::addButton(const std::string& buttonName) {
+ButtonControl* SimpleGUI::addButton(const std::string& buttonName) 
+{
 	ButtonControl* control = new ButtonControl(buttonName);
 	control->parentGui = this;
 	controls.push_back(control);
 	return control;
 }
 	
-LabelControl* SimpleGUI::addLabel(const std::string& labelName) {
+LabelControl* SimpleGUI::addLabel(const std::string& labelName) 
+{
 	LabelControl* control = new LabelControl(labelName);
 	control->parentGui = this;	
 	controls.push_back(control);
 	return control;
 }
 
-SeparatorControl* SimpleGUI::addSeparator() {
+SeparatorControl* SimpleGUI::addSeparator() 
+{
 	SeparatorControl* control = new SeparatorControl();
 	control->parentGui = this;	
 	controls.push_back(control);
 	return control;
 }
 	
-ColumnControl* SimpleGUI::addColumn(int x, int y) {
+ColumnControl* SimpleGUI::addColumn(int x, int y) 
+{
 	ColumnControl* control = new ColumnControl(x, y);
 	control->parentGui = this;	
 	controls.push_back(control);
 	return control;
 }
 
-PanelControl* SimpleGUI::addPanel() {
+PanelControl* SimpleGUI::addPanel() 
+{
 	PanelControl* control = new PanelControl();
 	control->parentGui = this;	
 	controls.push_back(control);
 	return control;
 }
 	
-void SimpleGUI::draw() {	
+void SimpleGUI::draw() 
+{	
 	if (!enabled) return;
 
 	gl::pushMatrices();
@@ -176,15 +192,18 @@ void SimpleGUI::draw() {
 	gl::popMatrices();
 }
 	
-bool SimpleGUI::isEnabled() {
+bool SimpleGUI::isEnabled() 
+{
 	return enabled;
 }
 
-void SimpleGUI::setEnabled(bool state) {
+void SimpleGUI::setEnabled(bool state) 
+{
 	enabled = state;
 }
 
-void SimpleGUI::dump() {
+void SimpleGUI::dump() 
+{
 	std::vector<Control*>::iterator it = controls.begin();
 	while(it != controls.end()) {
 		Control* control = *it++;		
@@ -193,7 +212,8 @@ void SimpleGUI::dump() {
 	}
 }
 	
-void SimpleGUI::save(std::string fileName) {
+void SimpleGUI::save(std::string fileName) 
+{
 	console() << "SimpleGUI::save " << fileName << std::endl;
 	std::vector<Control*>::iterator it = controls.begin();
 	std::fstream file_op(fileName.c_str(), std::ios::out);	
@@ -205,7 +225,8 @@ void SimpleGUI::save(std::string fileName) {
 	file_op.close();
 }
 
-void SimpleGUI::load(std::string fileName) {
+void SimpleGUI::load(std::string fileName) 
+{
 	console() << "SimpleGUI::load " << fileName << std::endl;
 	std::fstream file_op(fileName.c_str(), std::ios::in);
 	char str[2000];
@@ -213,12 +234,14 @@ void SimpleGUI::load(std::string fileName) {
 		console() << "SimpleGUI::load " << "failed" << std::endl;
 		return;
 	}
-	while(!file_op.eof()) {
+	while(!file_op.eof()) 
+  {
 		file_op.getline(str, 2000);
 		std::string line(str);
 		size_t colonPos = line.find(":");
 		
-		if (colonPos == std::string::npos) {
+		if (colonPos == std::string::npos) 
+    {
 			continue;
 		}
 		
@@ -229,7 +252,8 @@ void SimpleGUI::load(std::string fileName) {
 		boost::trim(value);
 		
 		Control* control = getControlByName(name);
-		if (control) {
+		if (control) 
+    {
 			control->fromString(value);
 		}		
 	}    
@@ -237,13 +261,16 @@ void SimpleGUI::load(std::string fileName) {
 }
 	
 
-bool SimpleGUI::onMouseDown(MouseEvent event) {
+bool SimpleGUI::onMouseDown(MouseEvent event) 
+{
 	if (!enabled) return false;
 	
 	std::vector<Control*>::iterator it = controls.begin();	
-	while(it != controls.end()) {
+	while(it != controls.end()) 
+  {
 		Control* control = *it++;
-		if (control->activeArea.contains(event.getPos())) {
+		if (control->activeArea.contains(event.getPos())) 
+    {
 			selectedControl = control;
 			selectedControl->onMouseDown(event);	
 			return true;
@@ -252,7 +279,8 @@ bool SimpleGUI::onMouseDown(MouseEvent event) {
 	return false;
 }
 
-bool SimpleGUI::onMouseUp(MouseEvent event) {
+bool SimpleGUI::onMouseUp(MouseEvent event) 
+{
 	if (!enabled) return false;
 	
 	if (selectedControl != NULL) {
@@ -263,26 +291,30 @@ bool SimpleGUI::onMouseUp(MouseEvent event) {
 	return false;
 }
 	
-bool SimpleGUI::onMouseDrag(MouseEvent event) {
+bool SimpleGUI::onMouseDrag(MouseEvent event) 
+{
 	if (!enabled) return false;
 	
 	mousePos = event.getPos();
 	
-	if (selectedControl) {
+	if (selectedControl) 
+  {
 		selectedControl->onMouseDrag(event);
 		return true;
 	}
 	return false;
 }
 	
-Vec2f SimpleGUI::getStringSize(const std::string& str) {
+Vec2f SimpleGUI::getStringSize(const std::string& str) 
+{
 	TextLayout text;
 	text.addLine(str);
 	Surface s = text.render(true);
 	return s.getSize();
 }
 	
-Rectf SimpleGUI::getScaledWidthRectf(Rectf rect, float scale) {
+Rectf SimpleGUI::getScaledWidthRectf(Rectf rect, float scale) 
+{
 	return Rectf(
 		rect.getX1(),
 		rect.getY1(),
@@ -291,11 +323,14 @@ Rectf SimpleGUI::getScaledWidthRectf(Rectf rect, float scale) {
 	);
 }
 	
-Control* SimpleGUI::getControlByName(const std::string& name) {
+Control* SimpleGUI::getControlByName(const std::string& name) 
+{
 	std::vector<Control*>::iterator it = controls.begin();	
-	while(it != controls.end()) {
+	while(it != controls.end()) 
+  {
 		Control* control = *it++;
-		if (control->name == name) {
+		if (control->name == name) 
+    {
 			return control;
 		}		
 	}
@@ -304,173 +339,20 @@ Control* SimpleGUI::getControlByName(const std::string& name) {
 
 //-----------------------------------------------------------------------------
 	
-Control::Control() {
+Control::Control() 
+{
 	bgColor = ColorA(0,0,0,0.5);
 }
 
-void Control::setBackgroundColor(ColorA color) {
+void Control::setBackgroundColor(ColorA color) 
+{
 	bgColor = color;
 }
 	
 //-----------------------------------------------------------------------------
 	
-FloatVarControl::FloatVarControl(const std::string& name, float* var, float min, float max, float defaultValue) {
-	this->type = Control::FLOAT_VAR;
-	this->name = name;
-	this->var = var;
-	this->min = min;
-	this->max = max;
-	if (defaultValue < min) {
-		*var = min;
-	}
-	else if (defaultValue > max) {
-		*var = max;
-	}
-	else {
-		*var = defaultValue;
-	}
-}
-	
-float FloatVarControl::getNormalizedValue() {
-	return (*var - min)/(max - min);
-}
-	
-void FloatVarControl::setNormalizedValue(float value) {
-	float newValue = min + value*(max - min);
-	if (newValue != *var) {
-		*var = newValue;
-	}
-}
-	
-Vec2f FloatVarControl::draw(Vec2f pos) {
-	activeArea = Rectf(
-		pos.x, 
-		pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y, 
-		pos.x + SimpleGUI::sliderSize.x, 
-		pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y
-	);		
-	
-	gl::color(SimpleGUI::bgColor);
-	gl::drawSolidRect(Rectf(
-		(pos - SimpleGUI::padding).x, 
-		(pos - SimpleGUI::padding).y, 
-		(pos + SimpleGUI::sliderSize + SimpleGUI::padding).x, 
-		(pos + SimpleGUI::labelSize + SimpleGUI::sliderSize + SimpleGUI::padding*2).y)
-	);	
-	
-	gl::drawString(name, pos, SimpleGUI::textColor, SimpleGUI::textFont);
-	
-	gl::color(SimpleGUI::darkColor);
-	gl::drawSolidRect(activeArea);
-	
-	gl::color(SimpleGUI::lightColor);
-	gl::drawSolidRect(SimpleGUI::getScaledWidthRectf(activeArea, getNormalizedValue()));
-	
-	pos.y += SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y + SimpleGUI::spacing;	
-	return pos;
-}
-	
-std::string FloatVarControl::toString() {
-	std::stringstream ss;
-	ss << *var;
-	return ss.str();
-}
-	
-void FloatVarControl::fromString(std::string& strValue) {
-	*var = boost::lexical_cast<float>(strValue);
-}
-	
-void FloatVarControl::onMouseDown(MouseEvent event) {
-	onMouseDrag(event);	
-}
-
-void FloatVarControl::onMouseDrag(MouseEvent event) {
-	float value = (event.getPos().x - activeArea.x1)/(activeArea.x2 - activeArea.x1);
-	value = math<float>::max(0.0, math<float>::min(value, 1.0));	
-	setNormalizedValue(value);
-}
-	
-//-----------------------------------------------------------------------------
-	
-IntVarControl::IntVarControl(const std::string& name, int* var, int min, int max, int defaultValue) {
-	this->type = Control::INT_VAR;
-	this->name = name;
-	this->var = var;
-	this->min = min;
-	this->max = max;
-	if (defaultValue < min) {
-		*var = min;
-	}
-	else if (defaultValue > max) {
-		*var = max;
-	}
-	else {
-		*var = defaultValue;
-	}
-}
-
-float IntVarControl::getNormalizedValue() {
-	return (*var - min)/(float)(max - min);
-}
-
-void IntVarControl::setNormalizedValue(float value) {
-	int newValue = min + value*(max - min);
-	if (newValue != *var) {
-		*var = newValue;
-	}
-}
-	
-Vec2f IntVarControl::draw(Vec2f pos) {
-	activeArea = Rectf(
-					   pos.x, 
-					   pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y, 
-					   pos.x + SimpleGUI::sliderSize.x, 
-					   pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y
-					   );		
-	
-	gl::color(SimpleGUI::bgColor);
-	gl::drawSolidRect(Rectf(
-							(pos - SimpleGUI::padding).x, 
-							(pos - SimpleGUI::padding).y, 
-							(pos + SimpleGUI::sliderSize + SimpleGUI::padding).x, 
-							(pos + SimpleGUI::labelSize + SimpleGUI::sliderSize + SimpleGUI::padding*2).y)
-					  );	
-	
-	gl::drawString(name, pos, SimpleGUI::textColor, SimpleGUI::textFont);
-	
-	gl::color(SimpleGUI::darkColor);
-	gl::drawSolidRect(activeArea);
-	
-	gl::color(SimpleGUI::lightColor);
-	gl::drawSolidRect(SimpleGUI::getScaledWidthRectf(activeArea, getNormalizedValue()));
-	
-	pos.y += SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y + SimpleGUI::spacing;	
-	return pos;	
-}	
-	
-std::string IntVarControl::toString() {
-	std::stringstream ss;
-	ss << *var;
-	return ss.str();	
-}
-
-void IntVarControl::fromString(std::string& strValue) {
-	*var = boost::lexical_cast<int>(strValue);	
-}
-
-void IntVarControl::onMouseDown(MouseEvent event) {
-	onMouseDrag(event);
-}
-	
-void IntVarControl::onMouseDrag(MouseEvent event) {
-	float value = (event.getPos().x - activeArea.x1)/(activeArea.x2 - activeArea.x1);
-	value = math<float>::max(0.0, math<float>::min(value, 1.0));	
-	setNormalizedValue(value);
-}
-	
-//-----------------------------------------------------------------------------
-	
-BoolVarControl::BoolVarControl(const std::string& name, bool* var, bool defaultValue, int groupId) {
+BoolVarControl::BoolVarControl(const std::string& name, bool* var, bool defaultValue, int groupId) 
+{
 	this->type = Control::BOOL_VAR;
 	this->name = name;
 	this->var = var;
@@ -494,18 +376,21 @@ Vec2f BoolVarControl::draw(Vec2f pos) {
 	return pos;
 }	
 	
-std::string BoolVarControl::toString() {
+std::string BoolVarControl::toString() 
+{
 	std::stringstream ss;
 	ss << *var;
 	return ss.str();	
 }
 
-void BoolVarControl::fromString(std::string& strValue) {
+void BoolVarControl::fromString(std::string& strValue) 
+{
 	int value = boost::lexical_cast<int>(strValue);	
 	*var = value ? true : false;
 }
 	
-void BoolVarControl::onMouseDown(MouseEvent event) {
+void BoolVarControl::onMouseDown(MouseEvent event) 
+{
 	if (groupId > -1) {
 		for(std::vector<Control*>::iterator it2 = parentGui->getControls().begin(); it2 != parentGui->getControls().end(); it2++) {
 			if (((*it2)->type == Control::BOOL_VAR) && (((BoolVarControl*)(*it2))->groupId == this->groupId)) {
@@ -520,7 +405,8 @@ void BoolVarControl::onMouseDown(MouseEvent event) {
 	
 //-----------------------------------------------------------------------------
 
-ColorVarControl::ColorVarControl(const std::string& name, ColorA* var, ColorA defaultValue, int colorModel) {
+ColorVarControl::ColorVarControl(const std::string& name, ColorA* var, ColorA defaultValue, int colorModel) 
+{
 	this->type = Control::COLOR_VAR;
 	this->name = name;
 	this->var = var;
@@ -529,7 +415,8 @@ ColorVarControl::ColorVarControl(const std::string& name, ColorA* var, ColorA de
 	activeTrack = 0;
 }
 	
-Vec2f ColorVarControl::draw(Vec2f pos) {
+Vec2f ColorVarControl::draw(Vec2f pos) 
+{
 	activeArea1 = Rectf(
 		pos.x, 
 		pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y, 
@@ -566,7 +453,8 @@ Vec2f ColorVarControl::draw(Vec2f pos) {
 	);	
 	
 	Vec4f values;
-	if (colorModel == SimpleGUI::RGB) {
+	if (colorModel == SimpleGUI::RGB) 
+  {
 		values = Vec4f(var->r, var->g, var->b, var->a);
 	}
 	else {
@@ -604,53 +492,65 @@ Vec2f ColorVarControl::draw(Vec2f pos) {
 	return pos;
 }
 		
-std::string ColorVarControl::toString() {
+std::string ColorVarControl::toString() 
+{
 	std::stringstream ss;
 	ss << var->r << " " << var->g << " " << var->b << " " << var->a;	
 	return ss.str();
 }
 
-void ColorVarControl::fromString(std::string& strValue) {
+void ColorVarControl::fromString(std::string& strValue) 
+{
 	std::vector<std::string> strs;
 	boost::split(strs, strValue, boost::is_any_of("\t "));
-	var->r = boost::lexical_cast<double>(strs[0]);
-	var->g = boost::lexical_cast<double>(strs[1]);	
-	var->b = boost::lexical_cast<double>(strs[2]);	
-	var->a = boost::lexical_cast<double>(strs[3]);	
+	var->r = boost::lexical_cast<float>(strs[0]);
+	var->g = boost::lexical_cast<float>(strs[1]);	
+	var->b = boost::lexical_cast<float>(strs[2]);	
+	var->a = boost::lexical_cast<float>(strs[3]);	
 }
 	
 	
-void ColorVarControl::onMouseDown(MouseEvent event) {	
-	if (activeArea1.contains(event.getPos())) {
+void ColorVarControl::onMouseDown(MouseEvent event) 
+{	
+	if (activeArea1.contains(event.getPos())) 
+  {
 		activeTrack = 1;
 	}
-	else if (activeArea2.contains(event.getPos())) {
+	else if (activeArea2.contains(event.getPos())) 
+  {
 		activeTrack = 2;
 	}
-	else if (activeArea3.contains(event.getPos())) {
+	else if (activeArea3.contains(event.getPos())) 
+  {
 		activeTrack = 3;
 	}
-	else if (activeArea4.contains(event.getPos())) {
+	else if (activeArea4.contains(event.getPos())) 
+  {
 		activeTrack = 4;
 	}
 	onMouseDrag(event);
 }
 	
-void ColorVarControl::onMouseDrag(MouseEvent event) {	
+void ColorVarControl::onMouseDrag(MouseEvent event) 
+{	
 	float value = (event.getPos().x - activeArea.x1)/(activeArea.x2 - activeArea.x1);
 	value = math<float>::max(0.0, math<float>::min(value, 1.0));	
 	
-	if (colorModel == SimpleGUI::RGB) {
-		switch (activeTrack) {
+	if (colorModel == SimpleGUI::RGB) 
+  {
+		switch (activeTrack) 
+    {
 			case 1: var->r = value; break;
 			case 2: var->g = value; break;
 			case 3: var->b = value; break;
 			case 4: var->a = value; break;				
 		}
 	}
-	else {
+	else 
+  {
 		Vec3f hsv = rgbToHSV(*var);
-		switch (activeTrack) {
+		switch (activeTrack) 
+    {
 			case 1: hsv.x = value; break;
 			case 2: hsv.y = value; break;
 			case 3: hsv.z = value; break;
@@ -662,13 +562,15 @@ void ColorVarControl::onMouseDrag(MouseEvent event) {
 	
 //-----------------------------------------------------------------------------	
 	
-ButtonControl::ButtonControl(const std::string& name) {
+ButtonControl::ButtonControl(const std::string& name) 
+{
 	this->type = Control::BUTTON;
 	this->name = name;		
 	this->pressed = false;
 }
 
-Vec2f ButtonControl::draw(Vec2f pos) {
+Vec2f ButtonControl::draw(Vec2f pos) 
+{
 	activeArea = Rectf(
 					   pos.x, 
 					   pos.y, 
@@ -687,21 +589,24 @@ Vec2f ButtonControl::draw(Vec2f pos) {
 	
 	gl::color(pressed ? SimpleGUI::lightColor : SimpleGUI::darkColor);
 	gl::drawSolidRect(activeArea);				
-	gl::drawString(name, Vec2f(pos.x + SimpleGUI::padding.x * 2, pos.y + floor(SimpleGUI::padding.y * 0.5)), pressed ? SimpleGUI::darkColor : SimpleGUI::textColor, SimpleGUI::textFont);					
+	gl::drawString(name, Vec2f(pos.x + SimpleGUI::padding.x * 2, pos.y + static_cast< float >( floor(SimpleGUI::padding.y * 0.5 ) ) ), pressed ? SimpleGUI::darkColor : SimpleGUI::textColor, SimpleGUI::textFont);					
 	pos.y += SimpleGUI::sliderSize.y + SimpleGUI::spacing + SimpleGUI::padding.y;
 	return pos;
 }
 	
-void ButtonControl::onMouseDown(MouseEvent event) {
+void ButtonControl::onMouseDown(MouseEvent event) 
+{
 	pressed = true;
 	fireClick();
 }
 	
-void ButtonControl::onMouseUp(MouseEvent event) {
+void ButtonControl::onMouseUp(MouseEvent event) 
+{
 	pressed = false;	
 }
 	
-void ButtonControl::fireClick() {
+void ButtonControl::fireClick() 
+{
 	MouseEvent event;
 	bool handled = false;
 	for( CallbackMgr<bool (MouseEvent)>::iterator cbIter = callbacksClick.begin(); ( cbIter != callbacksClick.end() ) && ( ! handled ); ++cbIter ) {
@@ -711,16 +616,19 @@ void ButtonControl::fireClick() {
 
 //-----------------------------------------------------------------------------	
 
-LabelControl::LabelControl(const std::string& name) {
+LabelControl::LabelControl(const std::string& name) 
+{
 	this->type = Control::LABEL;
 	this->name = name;		
 }
 	
-void LabelControl::setText(const std::string& text) {
+void LabelControl::setText(const std::string& text) 
+{
 	name = text;
 }	
 	
-Vec2f LabelControl::draw(Vec2f pos) {
+Vec2f LabelControl::draw(Vec2f pos) 
+{
 	if (bgColor) {
 		gl::color(bgColor);
 	}
@@ -740,12 +648,14 @@ Vec2f LabelControl::draw(Vec2f pos) {
 	
 //-----------------------------------------------------------------------------		
 	
-SeparatorControl::SeparatorControl() {
+SeparatorControl::SeparatorControl() 
+{
 	this->type = Control::SEPARATOR;
 	this->name = "Separator";	
 }	
 	
-Vec2f SeparatorControl::draw(Vec2f pos) {
+Vec2f SeparatorControl::draw(Vec2f pos) 
+{
 	activeArea = Rectf(pos - SimpleGUI::padding, pos + SimpleGUI::separatorSize + SimpleGUI::padding);
 	gl::color(SimpleGUI::bgColor);
 	gl::drawSolidRect(activeArea);				
@@ -755,48 +665,56 @@ Vec2f SeparatorControl::draw(Vec2f pos) {
 	
 //-----------------------------------------------------------------------------		
 
-ColumnControl::ColumnControl(int x, int y) {
+ColumnControl::ColumnControl(int x, int y) 
+{
 	this->x = x;
 	this->y = y;
 	this->type = Control::COLUMN;
 	this->name = "Column";	
 }	
 	
-Vec2f ColumnControl::draw(Vec2f pos) {
-	if (this->x == 0 && this->y == 0) {
+Vec2f ColumnControl::draw(Vec2f pos) 
+{
+	if (this->x == 0 && this->y == 0) 
+  {
 		pos.x += SimpleGUI::labelSize.x + SimpleGUI::spacing;
 		pos.y = SimpleGUI::spacing;
 	}
-	else {
-		pos.x = this->x;
-		pos.y = this->y;
+	else 
+  {
+		pos.x = static_cast< float >( x );
+		pos.y = static_cast< float >( y );
 	}
 	return pos;
 }
 	
 //-----------------------------------------------------------------------------		
 	
-PanelControl::PanelControl() {
+PanelControl::PanelControl() 
+{
 	this->enabled = true;
 	this->type = Control::PANEL;
 	this->name = "Panel";
 }	
 	
-Vec2f PanelControl::draw(Vec2f pos) {
+Vec2f PanelControl::draw(Vec2f pos) 
+{
 	return pos;
 }
 	
 //-----------------------------------------------------------------------------
 	
-TextureVarControl::TextureVarControl(const std::string& name, gl::Texture* var, int scale, bool flipVert) {
-	this->type = Control::TEXTURE_VAR;
-	this->name = name;
-	this->var = var;
-	this->scale = scale;
+TextureVarControl::TextureVarControl(const std::string& name, gl::Texture* var, int scale, bool flipVert) 
+{
+	this->type     = Control::TEXTURE_VAR;
+	this->name     = name;
+	this->var      = var;
+	this->scale    = static_cast< float >( scale );
 	this->flipVert = flipVert;
 }	
 	
-Vec2f TextureVarControl::draw(Vec2f pos) {
+Vec2f TextureVarControl::draw(Vec2f pos) 
+{
 	if (!*var) {
 		std::cout << "Missing texture" << std::endl;
 		return pos;				

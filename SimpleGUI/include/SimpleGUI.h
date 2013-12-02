@@ -28,6 +28,8 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <sstream>
 #include "cinder/app/App.h"
 #include "cinder/Text.h"
 #include "cinder/gl/Texture.h"
@@ -40,8 +42,10 @@ namespace mowa { namespace sgui {
 //-----------------------------------------------------------------------------
 	
 class Control;
-class FloatVarControl;
-class IntVarControl;
+template < class T > class TemplatedVarControl;
+typedef TemplatedVarControl< float  > FloatVarControl;
+typedef TemplatedVarControl< double > DoubleVarControl;
+typedef TemplatedVarControl< int    > IntVarControl;
 class BoolVarControl;
 class ButtonControl;
 class LabelControl;
@@ -99,6 +103,7 @@ public:
 	void	setEnabled(bool state);
 
 	FloatVarControl* 	addParam(const std::string& paramName, float* var, float min=0, float max=1, float defaultValue = 0);
+  DoubleVarControl* addParam(const std::string& paramName, double* var, double min=0, double max=1, double defaultValue = 0);
 	IntVarControl*		addParam(const std::string& paramName, int* var, int min=0, int max=1, int defaultValue = 0);
 	BoolVarControl*		addParam(const std::string& paramName, bool* var, bool defaultValue = false, int groupId = -1);
 	ColorVarControl*	addParam(const std::string& paramName, ColorA* var, ColorA const defaultValue = ColorA(0, 1, 1, 1), int colorModel = RGB);
@@ -155,38 +160,99 @@ public:
 	
 //-----------------------------------------------------------------------------
 
-class FloatVarControl : public Control {
-public:	
-	float* var;
-	float min;
-	float max;
+template < class T >
+class TemplatedVarControl : public Control
+{
+  public:	
+	T* var;
+	T min;
+	T max;
 public:
-	FloatVarControl(const std::string& name, float* var, float min=0, float max=1, float defaultValue = 0);
-	float getNormalizedValue();
-	void setNormalizedValue(float value);
-	Vec2f draw(Vec2f pos);
-	std::string toString();
-	void fromString(std::string& strValue);
-	void onMouseDown(MouseEvent event);	
-	void onMouseDrag(MouseEvent event);
-};
-	
-//-----------------------------------------------------------------------------
-	
-class IntVarControl : public Control {
-public:
-	int* var;
-	int min;
-	int max;
-public:
-	IntVarControl(const std::string& name, int* var, int min=0, int max=1, int defaultValue = 0);
-	float getNormalizedValue();
-	void setNormalizedValue(float value);
-	Vec2f draw(Vec2f pos);
-	std::string toString();	
-	void fromString(std::string& strValue);
-	void onMouseDown(MouseEvent event);	
-	void onMouseDrag(MouseEvent event);	
+	TemplatedVarControl(const std::string& name, T* var, T min=0, T max=1, T defaultValue = 0)
+  {
+    this->type = Control::FLOAT_VAR;
+	  this->name = name;
+	  this->var = var;
+	  this->min = min;
+	  this->max = max;
+
+	  if (defaultValue < min) 
+    {
+		  *var = min;
+	  }
+	  else if (defaultValue > max) 
+    {
+		  *var = max;
+	  }
+	  else 
+    {
+		  *var = defaultValue;
+	  }
+  }
+
+	float getNormalizedValue()
+  {
+    return static_cast< float >( *var - min ) / static_cast< float >( max - min );
+  }
+
+	void setNormalizedValue(float value)
+  {
+	  *var = static_cast< T >( min + value * ( max - min ) );
+  }
+
+	Vec2f draw(Vec2f pos)
+  {
+    activeArea = Rectf(
+      pos.x, 
+      pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y, 
+      pos.x + SimpleGUI::sliderSize.x, 
+      pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y
+      );		
+
+    gl::color(SimpleGUI::bgColor);
+    gl::drawSolidRect(Rectf(
+      (pos - SimpleGUI::padding).x, 
+      (pos - SimpleGUI::padding).y, 
+      (pos + SimpleGUI::sliderSize + SimpleGUI::padding).x, 
+      (pos + SimpleGUI::labelSize + SimpleGUI::sliderSize + SimpleGUI::padding*2).y)
+      );	
+
+    gl::drawString(name, pos, SimpleGUI::textColor, SimpleGUI::textFont);
+
+    gl::color(SimpleGUI::darkColor);
+    gl::drawSolidRect(activeArea);
+
+    gl::color(SimpleGUI::lightColor);
+    gl::drawSolidRect(SimpleGUI::getScaledWidthRectf(activeArea, static_cast< float >( getNormalizedValue() ) ) );
+
+    pos.y += SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y + SimpleGUI::spacing;	
+    return pos;
+  }
+
+	std::string toString()
+  {
+	  std::stringstream ss;
+	  ss << *var;
+	  return ss.str();
+  }
+
+	void fromString(std::string& strValue)
+  {
+    *var = boost::lexical_cast<T>(strValue);
+  }
+
+	void onMouseDown(ci::app::MouseEvent event)
+  {
+    onMouseDrag( event );	
+  }
+
+	void onMouseDrag(ci::app::MouseEvent event)
+  {
+	  float value = static_cast< float >( event.getPos().x - activeArea.x1 ) / static_cast< float >( activeArea.x2 - activeArea.x1 );
+	  value = math< float >::max( 0.0f, math< float >::min( value, 1.0f ) );	
+	  setNormalizedValue( value );
+  }
+
 };
 	
 //-----------------------------------------------------------------------------
