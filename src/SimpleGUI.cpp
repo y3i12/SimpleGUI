@@ -36,7 +36,6 @@ Fix: - window resource loading
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include "SimpleGUI.h"
-#include "../include/SimpleGUI.h"
 #include "cinder/Utilities.h"
 #include "cinder/Font.h"
 #include "cinder/CinderMath.h"
@@ -95,14 +94,14 @@ SimpleGUI::~SimpleGUI()
   
 void SimpleGUI::init( app::WindowRef window ) 
 {  
-  textFont = Font( loadResource(RES_FONT), 8);
+  textFont               = Font( "PF Tempesta Seven", 8 );
   SimpleGUI::textureFont = ci::gl::TextureFont::create( textFont );
   selectedControl        = NULL;
 
-  cnMouseDown   = window->getSignalMouseDown().connect(   std::bind( &SquareListener::onMouseDown,  this, std::_1 ) );
-  cnMouseDrag   = window->getSignalMouseDrag().connect(   std::bind( &SquareListener::onMouseDrag,  this, std::_1 ) );
-  cnMouseUp     = window->getSignalMouseUp().connect(     std::bind( &SquareListener::onMouseUp,    this, std::_1 ) );
-  cnMouseWheel  = window->getSignalMouseWheel().connect(  std::bind( &SquareListener::onMouseWheel, this, std::_1 ) );
+  cnMouseDown   = window->getSignalMouseDown().connect(   std::bind( &SimpleGUI::onMouseDown,  this, std::_1 ) );
+  cnMouseDrag   = window->getSignalMouseDrag().connect(   std::bind( &SimpleGUI::onMouseDrag,  this, std::_1 ) );
+  cnMouseUp     = window->getSignalMouseUp().connect(     std::bind( &SimpleGUI::onMouseUp,    this, std::_1 ) );
+  cnMouseWheel  = window->getSignalMouseWheel().connect(  std::bind( &SimpleGUI::onMouseWheel, this, std::_1 ) );
 }
 
 FloatVarControl* SimpleGUI::addParam( const std::string& paramName, float* var, float min, float max, float defaultValue ) 

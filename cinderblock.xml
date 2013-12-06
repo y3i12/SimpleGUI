@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <cinder>
 <block
-	name="SimpleGUI iOS"
-	id="com.marcinignac.simplegui"
+	name="SimpleGUI"
+	id="com.y3i12.simplegui"
 	author="Marcin Ignac, Tom Carden"
-	summary="Collection of my C++ classes that I use together with CinderLib"
-	license="BSD"
+	summary="SimpleGUI user interface CinderBlock"
 	git="https://github.com/vorg/MowaLibs.git"
-	version="0.1"
-	libraryUrl="http://marcinignac.com/blog/simplegui/"
+	license="BSD"
+	version="0.2"
+	libraryUrl="http://y3i12.com/blog/simplegui/"
 	>
 	
 	<headerPattern>include/*.h</headerPattern>
