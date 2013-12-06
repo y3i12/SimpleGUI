@@ -11,12 +11,12 @@
 	libraryUrl="http://marcinignac.com/blog/simplegui/"
 	>
 	
-	<headerPattern>SimpleGUI/include/*.h</headerPattern>
-	<sourcePattern>SimpleGUI/src/*.cpp</sourcePattern>
-	<resource>SimpleGUI/resources/pf_tempesta_seven.ttf</resource>
+	<headerPattern>include/*.h</headerPattern>
+	<sourcePattern>src/*.cpp</sourcePattern>
+	<resource>resources/pf_tempesta_seven.ttf</resource>
 
 	<platform os="msw">
-		<includePath system="false">SimpleGUI/include</includePath>
+		<includePath system="false">include</includePath>
 	</platform>
 
 </block>
