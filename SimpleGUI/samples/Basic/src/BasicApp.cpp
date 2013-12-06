@@ -32,7 +32,7 @@ public:
 };
 
 void BasicApp::setup() {
-	gui = new SimpleGUI(this);
+	gui = new SimpleGUI(   );
 	gui->lightColor = ColorA(1, 1, 0, 1);	
 	gui->addLabel("CONTROLS");
 	gui->addParam("Rotation", &rotation, 0, 360, 0);

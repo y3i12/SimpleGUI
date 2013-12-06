@@ -24,15 +24,23 @@
 //
 // Temptesta Seven font by Yusuke Kamiyamane http://p.yusukekamiyamane.com/fonts/
 // "The fonts can be used free for any personal or commercial projects."
+/**
+modified by: Ishyca
+Fix: - window resource loading
+	 - register mouse and key event 
+	 - multiple window
+**/
 
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include "SimpleGUI.h"
+#include "../include/SimpleGUI.h"
 #include "cinder/Utilities.h"
 #include "cinder/Font.h"
 #include "cinder/CinderMath.h"
+#include "Resources.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -41,6 +49,7 @@ using namespace std;
 namespace mowa { namespace sgui {
   
 //-----------------------------------------------------------------------------
+
 
 Font                SimpleGUI::textFont      = Font();
 gl::TextureFontRef  SimpleGUI::textureFont;
@@ -53,10 +62,17 @@ Vec2f               SimpleGUI::padding       = Vec2f(3.0f, 3.0f);
 Vec2f               SimpleGUI::sliderSize    = Vec2f(125.0f, 10.0f);
 Vec2f               SimpleGUI::labelSize     = Vec2f(125.0f, 10.0f);
 Vec2f               SimpleGUI::separatorSize = Vec2f(125.0f, 1.0f);
-  
-SimpleGUI::SimpleGUI( App* app ) 
+
+SimpleGUI::SimpleGUI( ci::app::App* app ) 
 {
-  init( app );
+  init( app->getWindow() );
+  enabled = true;
+}
+
+
+SimpleGUI::SimpleGUI( ci::app::WindowRef window ) 
+{
+	init( window );
   enabled = true;
 }
 
@@ -77,16 +93,16 @@ SimpleGUI::~SimpleGUI()
   }
 }
   
-void SimpleGUI::init(App* app) 
+void SimpleGUI::init( app::WindowRef window ) 
 {  
-  textFont               = Font("PF Tempesta Seven",8);
+  textFont = Font( loadResource(RES_FONT), 8);
   SimpleGUI::textureFont = ci::gl::TextureFont::create( textFont );
   selectedControl        = NULL;
 
-  cnMouseDown   = app->getWindow()->getSignalMouseDown().connect(   std::bind( &SimpleGUI::onMouseDown,  this, std::_1 ) );
-  cnMouseUp     = app->getWindow()->getSignalMouseUp().connect(     std::bind( &SimpleGUI::onMouseUp,    this, std::_1 ) );
-  cnMouseDrag   = app->getWindow()->getSignalMouseDrag().connect(   std::bind( &SimpleGUI::onMouseDrag,  this, std::_1 ) );
-  cnMouseWheel  = app->getWindow()->getSignalMouseWheel().connect(  std::bind( &SimpleGUI::onMouseWheel, this, std::_1 ) );
+  cnMouseDown   = window->getSignalMouseDown().connect(   std::bind( &SquareListener::onMouseDown,  this, std::_1 ) );
+  cnMouseDrag   = window->getSignalMouseDrag().connect(   std::bind( &SquareListener::onMouseDrag,  this, std::_1 ) );
+  cnMouseUp     = window->getSignalMouseUp().connect(     std::bind( &SquareListener::onMouseUp,    this, std::_1 ) );
+  cnMouseWheel  = window->getSignalMouseWheel().connect(  std::bind( &SquareListener::onMouseWheel, this, std::_1 ) );
 }
 
 FloatVarControl* SimpleGUI::addParam( const std::string& paramName, float* var, float min, float max, float defaultValue ) 
@@ -253,6 +269,7 @@ PanelControl* SimpleGUI::addPanel()
 
   return control;
 }
+
 
 void SimpleGUI::removeControl( Control* controlToRemove ) 
 {
@@ -497,7 +514,7 @@ Rectf SimpleGUI::getScaledWidthRectf( Rectf rect, float scale )
 {
   return Rectf( rect.getX1(), rect.getY1(), rect.getX1() + rect.getWidth() * scale, rect.getY1() + rect.getHeight() );
 }
-  
+
 Control* SimpleGUI::getControlByName( const std::string& name ) 
 {
   std::vector<Control*>::iterator it     = controls.begin();

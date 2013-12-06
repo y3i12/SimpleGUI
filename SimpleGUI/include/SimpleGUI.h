@@ -24,6 +24,7 @@
 //
 // Temptesta Seven font by Yusuke Kamiyamane http://p.yusukekamiyamane.com/fonts/
 // "The fonts can be used free for any personal or commercial projects."
+/*Kira's Notes: use multiple window in mainApp, assigned each window, it is instance of simpleGUI*/
 
 #pragma once
 
@@ -35,6 +36,7 @@
 #include "cinder/Text.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/TextureFont.h"
+
 
 namespace mowa { namespace sgui {
   
@@ -71,12 +73,13 @@ private:
   std::vector<Control*> controls;
   Control* selectedControl;
   
-  ci::signals::connection  cnMouseDown;
-  ci::signals::connection  cnMouseUp;
+  ci::signals::connection cnMouseDown;
+  ci::signals::connection cnMouseUp;
   ci::signals::connection cnMouseDrag;
   ci::signals::connection cnMouseWheel;
 
-  void  init(ci::app::App* app);
+ 	void	init( ci::app::WindowRef window );	
+
 public:
   static ci::ColorA darkColor;
   static ci::ColorA lightColor;
@@ -98,6 +101,7 @@ public:
 
 public:
   SimpleGUI( ci::app::App* app );
+  SimpleGUI( ci::app::WindowRef window );
   ~SimpleGUI();
 
   bool                      isSelected()         { return selectedControl != 0; }
@@ -134,16 +138,16 @@ public:
 
   TextureVarControl*  addParam( const std::string& paramName, ci::gl::Texture* var, int scale = 1, bool flipVert = false );
   
-  ButtonControl*     addButton( const std::string& buttonName );
-  LabelControl*      addLabel(  const std::string& labelName  );  
-  SeparatorControl*  addSeparator();  
-  ColumnControl*     addColumn( int x = 0, int y = 0 );  
-  PanelControl*      addPanel();
+  ButtonControl*      addButton( const std::string& buttonName );
+  LabelControl*       addLabel(  const std::string& labelName  );  
+  SeparatorControl*   addSeparator();  
+  ColumnControl*      addColumn( int x = 0, int y = 0 );  
+  PanelControl*       addPanel();
   
-  Control*           getControlByName( const std::string& name );
+  Control*            getControlByName( const std::string& name );
   
-  static ci::Vec2f   getStringSize( const std::string& str );
-  static ci::Rectf   getScaledWidthRectf( ci::Rectf rect, float scale );
+  static ci::Vec2f    getStringSize( const std::string& str );
+  static ci::Rectf    getScaledWidthRectf( ci::Rectf rect, float scale );
 };
   
 //-----------------------------------------------------------------------------
