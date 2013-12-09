@@ -32,13 +32,16 @@
 #include <string>
 #include <sstream>
 #include <boost/lexical_cast.hpp>
+#include "cinder/gl/gl.h"
 #include "cinder/app/App.h"
 #include "cinder/Text.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/gl/TextureFont.h"
+#include "cinder/Rect.h"
+#include "cinder/Color.h"
 
 
-namespace mowa { namespace sgui {
+namespace sgui {
   
 //-----------------------------------------------------------------------------
   
@@ -281,29 +284,29 @@ public:
 
   ci::Vec2f draw(ci::Vec2f pos)
   {
-    activeArea = Rectf(
+    activeArea = ci::Rectf(
       pos.x, 
       pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y, 
       pos.x + SimpleGUI::sliderSize.x, 
       pos.y + SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y
     );    
   
-    gl::color( SimpleGUI::bgColor );
-    gl::drawSolidRect( Rectf(
+    ci::gl::color( SimpleGUI::bgColor );
+    ci::gl::drawSolidRect( ci::Rectf(
       ( pos - SimpleGUI::padding ).x, 
       ( pos - SimpleGUI::padding ).y, 
       ( pos + SimpleGUI::sliderSize + SimpleGUI::padding ).x, 
       ( pos + SimpleGUI::labelSize + SimpleGUI::sliderSize + SimpleGUI::padding * 2 ).y )
     );  
   
-    gl::color( ColorA( 1.0f, 1.0f, 1.0f, 1.0f ) );
-    gl::draw( labelTexture, pos );
+    ci::gl::color( 1.0f, 1.0f, 1.0f, 1.0f );
+    ci::gl::draw( labelTexture, pos );
   
-    gl::color( SimpleGUI::darkColor );
-    gl::drawSolidRect( activeArea );
+    ci::gl::color( SimpleGUI::darkColor );
+    ci::gl::drawSolidRect( activeArea );
   
-    gl::color( SimpleGUI::lightColor );
-    gl::drawSolidRect( SimpleGUI::getScaledWidthRectf( activeArea, getNormalizedValue() ) );
+    ci::gl::color( SimpleGUI::lightColor );
+    ci::gl::drawSolidRect( SimpleGUI::getScaledWidthRectf( activeArea, getNormalizedValue() ) );
   
     pos.y += SimpleGUI::labelSize.y + SimpleGUI::padding.y + SimpleGUI::sliderSize.y + SimpleGUI::spacing;  
     return pos;
@@ -329,7 +332,7 @@ public:
   void onMouseDrag( ci::app::MouseEvent event )
   {
     float value = static_cast< float >( event.getPos().x - activeArea.x1 ) / static_cast< float >( activeArea.x2 - activeArea.x1 );
-    value = math< float >::max( 0.0f, math< float >::min( value, 1.0f ) );  
+    value = ci::math< float >::max( 0.0f, ci::math< float >::min( value, 1.0f ) );  
     setNormalizedValue( value );
 
     triggerCallback();
@@ -342,7 +345,7 @@ public:
     const float delta     = event.getWheelIncrement() * step;
     T           newValue  = static_cast< T >( *var + delta );
     
-    *var = math< T >::clamp( newValue, min, max );
+    *var = ci::math< T >::clamp( newValue, min, max );
     triggerCallback();
     setValueOnLabel();
   }
@@ -529,4 +532,3 @@ public:
 //-----------------------------------------------------------------------------
 
 } //namespace sgui
-} //namespace vrg

@@ -45,7 +45,7 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-namespace mowa { namespace sgui {
+namespace sgui {
   
 //-----------------------------------------------------------------------------
 
@@ -1336,4 +1336,3 @@ void TextureVarControl::onMouseDown( MouseEvent event )
 //-----------------------------------------------------------------------------  
 
 } //namespace sgui
-} //namespace mowa
